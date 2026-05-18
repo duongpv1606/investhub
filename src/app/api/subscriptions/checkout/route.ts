@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
 export const dynamic = "force-dynamic";
-
 export async function POST(req: NextRequest) {
-  return NextResponse.json(
-    { message: "Subscription requires Stripe configuration" },
-    { status: 501 }
-  );
+  return NextResponse.json({ message: "Coming soon" }, { status: 501 });
 }

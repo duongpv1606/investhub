@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import type { MarketTab } from "@/types";
-import { TRADING_VIEW_SYMBOLS } from "@/lib/utils";
-import { Maximize2 } from "lucide-react";
 
-const TABS: { key: MarketTab; label: string; symbol: string }[] = [
-  { key: "vnindex", label: "VN-Index", symbol: "HOSE:VNINDEX" },
-  { key: "gold", label: "Vàng", symbol: "TVC:GOLD" },
-  { key: "btc", label: "BTC", symbol: "BINANCE:BTCUSDT" },
-  { key: "eth", label: "ETH", symbol: "BINANCE:ETHUSDT" },
-  { key: "xrp", label: "XRP", symbol: "BINANCE:XRPUSDT" },
+type MarketTab = "vnindex" | "vn30" | "vcb" | "hpg" | "fpt" | "gold" | "btc" | "eth" | "xrp";
+
+const TABS = [
+  { key: "vnindex" as MarketTab, label: "VN-Index", symbol: "VNINDEX", type: "vn" },
+  { key: "vn30" as MarketTab, label: "VN30", symbol: "VN30", type: "vn" },
+  { key: "vcb" as MarketTab, label: "VCB", symbol: "VCB", type: "vn" },
+  { key: "hpg" as MarketTab, label: "HPG", symbol: "HPG", type: "vn" },
+  { key: "fpt" as MarketTab, label: "FPT", symbol: "FPT", type: "vn" },
+  { key: "gold" as MarketTab, label: "Vàng", symbol: "TVC:GOLD", type: "gold" },
+  { key: "btc" as MarketTab, label: "BTC", symbol: "BINANCE:BTCUSDT", type: "crypto" },
+  { key: "eth" as MarketTab, label: "ETH", symbol: "BINANCE:ETHUSDT", type: "crypto" },
+  { key: "xrp" as MarketTab, label: "XRP", symbol: "BINANCE:XRPUSDT", type: "crypto" },
 ];
 
 const INTERVALS = [
@@ -21,99 +24,125 @@ const INTERVALS = [
   { label: "1W", value: "W" },
 ];
 
-interface TradingViewChartProps {
-  defaultTab?: MarketTab;
-}
+const VN_STOCKS = ["VNINDEX","VN30","VCB","BID","VIC","HPG","FPT","TCB","MBB","VNM","GAS","MSN","MWG","VHM","CTG","VPB","ACB"];
 
-export function TradingViewChart({ defaultTab = "vnindex" }: TradingViewChartProps) {
+export function TradingViewChart({ defaultTab = "vnindex" }: { defaultTab?: MarketTab }) {
   const [activeTab, setActiveTab] = useState<MarketTab>(defaultTab);
   const [interval, setInterval] = useState("D");
+  const [customSymbol, setCustomSymbol] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
-  const widgetRef = useRef<any>(null);
 
   const currentTab = TABS.find(t => t.key === activeTab)!;
 
-  useEffect(() => {
+  const loadChart = (symbol: string, type: string) => {
     if (!containerRef.current) return;
-
-    // Remove old widget
     containerRef.current.innerHTML = "";
 
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.type = "text/javascript";
-    script.async = true;
-    script.innerHTML = JSON.stringify({
-      autosize: true,
-      symbol: currentTab.symbol,
-      interval,
-      timezone: "Asia/Ho_Chi_Minh",
-      theme: "dark",
-      style: "1",
-      locale: "vi_VN",
-      backgroundColor: "#161D2F",
-      gridColor: "rgba(31,45,69,0.5)",
-      hide_top_toolbar: false,
-      hide_legend: false,
-      save_image: false,
-      calendar: false,
-      support_host: "https://www.tradingview.com",
-    });
+    if (type === "vn") {
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://tcinvest.tcbs.com.vn/chart/advanced?ticker=${symbol}&type=VN_STOCK&theme=dark`;
+      iframe.style.cssText = "width:100%;height:460px;border:none;";
+      iframe.loading = "lazy";
+      containerRef.current.appendChild(iframe);
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+      script.type = "text/javascript";
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        autosize: true,
+        symbol,
+        interval,
+        timezone: "Asia/Ho_Chi_Minh",
+        theme: "dark",
+        style: "1",
+        locale: "vi_VN",
+        backgroundColor: "#161D2F",
+        gridColor: "rgba(31,45,69,0.5)",
+        hide_top_toolbar: false,
+        save_image: false,
+      });
+      containerRef.current.appendChild(script);
+    }
+  };
 
-    containerRef.current.appendChild(script);
+  useEffect(() => {
+    loadChart(currentTab.symbol, currentTab.type);
   }, [activeTab, interval]);
 
   return (
     <div className="card overflow-hidden">
       {/* Tab bar */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-1">
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                activeTab === tab.key
-                  ? "bg-primary text-bg font-bold"
-                  : "text-muted hover:text-white hover:bg-card"
-              )}
-            >
+      <div className="border-b border-border px-3 py-2.5">
+        <div className="flex items-center gap-1 flex-wrap">
+          <span className="text-xs text-muted mr-1">🇻🇳</span>
+          {TABS.filter(t => t.type === "vn").map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={cn("px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
+                activeTab === tab.key ? "bg-primary text-bg font-bold" : "text-muted hover:text-white hover:bg-card"
+              )}>
               {tab.label}
             </button>
           ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {INTERVALS.map(iv => (
-              <button
-                key={iv.value}
-                onClick={() => setInterval(iv.value)}
-                className={cn(
-                  "px-2 py-1 rounded text-xs font-mono transition-all",
-                  interval === iv.value
-                    ? "bg-accent/20 text-accent"
-                    : "text-muted hover:text-white"
-                )}
-              >
-                {iv.label}
-              </button>
-            ))}
-          </div>
-          <button className="p-1.5 rounded-lg text-muted hover:text-white hover:bg-card transition-colors">
-            <Maximize2 className="h-3.5 w-3.5" />
-          </button>
+          <div className="w-px h-4 bg-border mx-1" />
+          {TABS.filter(t => t.type !== "vn").map(tab => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={cn("px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
+                activeTab === tab.key
+                  ? tab.type === "gold" ? "bg-gold/20 text-gold font-bold" : "bg-accent/20 text-accent font-bold"
+                  : "text-muted hover:text-white hover:bg-card"
+              )}>
+              {tab.label}
+            </button>
+          ))}
+          {currentTab.type !== "vn" && (
+            <>
+              <div className="w-px h-4 bg-border mx-1" />
+              {INTERVALS.map(iv => (
+                <button key={iv.value} onClick={() => setInterval(iv.value)}
+                  className={cn("px-2 py-1 rounded text-xs font-mono transition-all",
+                    interval === iv.value ? "bg-accent/20 text-accent" : "text-muted hover:text-white"
+                  )}>
+                  {iv.label}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="tradingview-widget-container" style={{ height: "460px" }}>
-        <div
-          ref={containerRef}
-          className="tradingview-widget-container__widget"
-          style={{ height: "100%", width: "100%" }}
-        />
+      {/* Chart container */}
+      <div style={{ height: "460px", background: "#161D2F" }}>
+        <div ref={containerRef} style={{ height: "100%", width: "100%" }} />
       </div>
+
+      {/* VN Stock quick search */}
+      {currentTab.type === "vn" && (
+        <div className="border-t border-border px-4 py-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted">Mã khác:</span>
+            {VN_STOCKS.map(sym => (
+              <button key={sym}
+                onClick={() => loadChart(sym, "vn")}
+                className="text-xs font-mono px-2 py-0.5 rounded bg-card hover:bg-primary/10 hover:text-primary text-muted transition-colors border border-border">
+                {sym}
+              </button>
+            ))}
+            <input
+              placeholder="Nhập mã..."
+              value={customSymbol}
+              onChange={e => setCustomSymbol(e.target.value.toUpperCase())}
+              onKeyDown={e => {
+                if (e.key === "Enter" && customSymbol) {
+                  loadChart(customSymbol, "vn");
+                  setCustomSymbol("");
+                }
+              }}
+              className="text-xs font-mono px-2 py-0.5 rounded bg-card border border-border text-white placeholder:text-muted outline-none focus:border-primary w-20"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

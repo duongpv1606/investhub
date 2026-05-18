@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0A0E1A;
+  --surface: #111827;
+  --card: #161D2F;
+  --border: #1F2D45;
+  --primary: #00C896;
+  --accent: #3B82F6;
+  --muted: #64748B;
+  --up: #00C896;
+  --down: #EF4444;
+  --gold: #F59E0B;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: #F1F5F9;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::selection { background: rgba(0,200,150,0.2); }
+
+@layer utilities {
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .gold { color: var(--gold); }
+  .text-muted { color: var(--muted); }
+  .bg-card { background: var(--card); }
+  .border-card { border-color: var(--border); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  .animate-in { animation: fadeIn 0.3s ease both; }
+}
+
+.tradingview-widget-container { border-radius: 12px; overflow: hidden; }

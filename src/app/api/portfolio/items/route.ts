@@ -1,9 +1,1 @@
-import { NextRequest, NextResponse } from "next/server";
-
-export async function GET(req: NextRequest) {
-  return NextResponse.json([]);
-}
-
-export async function POST(req: NextRequest) {
-  return NextResponse.json({ message: "Portfolio feature requires authentication" }, { status: 401 });
-}
+export const dynamic = "force-dynamic"; 

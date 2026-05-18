@@ -7,7 +7,7 @@ import { TRADING_VIEW_SYMBOLS } from "@/lib/utils";
 import { Maximize2 } from "lucide-react";
 
 const TABS: { key: MarketTab; label: string; symbol: string }[] = [
-  { key: "vnindex", label: "VN-Index", symbol: "TVC:VNINDEX" },
+  { key: "vnindex", label: "VN-Index", symbol: "HOSE:VNINDEX" },
   { key: "gold", label: "Vàng", symbol: "TVC:GOLD" },
   { key: "btc", label: "BTC", symbol: "BINANCE:BTCUSDT" },
   { key: "eth", label: "ETH", symbol: "BINANCE:ETHUSDT" },

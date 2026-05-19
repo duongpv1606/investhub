@@ -135,10 +135,10 @@ async function fetchRSSFeed(
 ): Promise<NewsArticle[]> {
   try {
     // Proxy qua allorigins để bypass CORS
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`;
     const res = await fetch(proxyUrl, {
       next: { revalidate: 300 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

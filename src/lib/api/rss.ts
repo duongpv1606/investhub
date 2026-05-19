@@ -6,14 +6,18 @@ import type { NewsArticle } from "@/types/market";
 const RSS_FEEDS = {
   stocks: [
     { url: "https://cafef.vn/thi-truong-chung-khoan.rss", source: "CafeF", category: "Chứng khoán" },
+    { url: "https://cafef.vn/dau-tu.rss", source: "CafeF", category: "Đầu tư" },
+    { url: "https://cafef.vn/tai-chinh-ngan-hang.rss", source: "CafeF", category: "Tài chính" },
     { url: "https://vnexpress.net/rss/kinh-doanh.rss", source: "VnExpress", category: "Kinh doanh" },
+    { url: "https://vnexpress.net/rss/chung-khoan.rss", source: "VnExpress", category: "Chứng khoán" },
   ],
   gold: [
-    { url: "https://vnexpress.net/rss/kinh-doanh.rss", source: "VnExpress", category: "Vàng" },
+    { url: "https://cafef.vn/thi-truong.rss", source: "CafeF", category: "Thị trường" },
+    { url: "https://vnexpress.net/rss/kinh-doanh.rss", source: "VnExpress", category: "Kinh doanh" },
   ],
   crypto: [
-    { url: "https://www.coindesk.com/arc/outboundfeeds/rss/", source: "CoinDesk", category: "Crypto" },
     { url: "https://cointelegraph.com/rss", source: "CoinTelegraph", category: "Crypto" },
+    { url: "https://coindesk.com/arc/outboundfeeds/rss/", source: "CoinDesk", category: "Crypto" },
   ],
 };
 

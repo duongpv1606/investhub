@@ -17,10 +17,14 @@ async function getMarketData() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const [pricesRes, newsRes] = await Promise.allSettled([
       fetch(`${baseUrl}/api/market/prices`, { next: { revalidate: 30 } }),
-      fetch(`${baseUrl}/api/market/news`, { next: { revalidate: 300 } }),
+      fetch(`${baseUrl}/api/news?limit=20`, { next: { revalidate: 300 } }),
     ]);
-    const prices = pricesRes.status === "fulfilled" && pricesRes.value.ok ? await pricesRes.value.json() : MOCK_MARKET_PRICES;
-    const news = newsRes.status === "fulfilled" && newsRes.value.ok ? await newsRes.value.json() : MOCK_NEWS;
+    const prices = pricesRes.status === "fulfilled" && pricesRes.value.ok
+      ? await pricesRes.value.json()
+      : MOCK_MARKET_PRICES;
+    const news = newsRes.status === "fulfilled" && newsRes.value.ok
+      ? await newsRes.value.json()
+      : MOCK_NEWS;
     return { prices, news };
   } catch {
     return { prices: MOCK_MARKET_PRICES, news: MOCK_NEWS };
@@ -42,7 +46,9 @@ export default async function HomePage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-xl font-bold text-white">Tổng quan thị trường</h1>
-              <p className="text-xs text-muted mt-0.5">Dữ liệu cập nhật liên tục — {new Date().toLocaleDateString("vi-VN")}</p>
+              <p className="text-xs text-muted mt-0.5">
+                Dữ liệu cập nhật liên tục — {new Date().toLocaleDateString("vi-VN")}
+              </p>
             </div>
             <div className="flex items-center gap-1.5 text-xs font-mono text-primary">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
@@ -56,7 +62,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Main layout — Chart + Sidebar */}
+        {/* Main layout */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
           {/* Left — 70% */}
@@ -76,7 +82,7 @@ export default async function HomePage() {
               <VNStockTable stocks={MOCK_VN_STOCKS} />
             </section>
 
-            {/* Latest news */}
+            {/* News */}
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-white">Tin tức mới nhất</h2>
@@ -90,14 +96,14 @@ export default async function HomePage() {
                 ))}
               </div>
               <div className="card p-4 mt-3">
-                {news.slice(4, 8).map((a: any) => (
+                {news.slice(4, 10).map((a: any) => (
                   <NewsCard key={a.id} article={a} />
                 ))}
               </div>
             </section>
           </div>
 
-          {/* Right Sidebar — 30% */}
+          {/* Right Sidebar */}
           <div className="space-y-4">
             <HotNews articles={news} />
             <TopMovers stocks={MOCK_VN_STOCKS} type="up" />
@@ -113,12 +119,19 @@ export default async function HomePage() {
             <div className="flex justify-center mb-3">
               <Bell className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Nhận tín hiệu giao dịch miễn phí</h2>
+            <h2 className="text-xl font-bold text-white mb-2">
+              Nhận tín hiệu giao dịch miễn phí
+            </h2>
             <p className="text-sm text-muted mb-4">
-              Tham gia cộng đồng 10,000+ nhà đầu tư — nhận phân tích thị trường, tín hiệu mua/bán hàng ngày qua Telegram
+              Tham gia cộng đồng 10,000+ nhà đầu tư — nhận phân tích thị trường,
+              tín hiệu mua/bán hàng ngày qua Telegram
             </p>
-            <a href="https://t.me/investhub_vn" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 font-semibold text-bg hover:bg-primary/90 transition-colors">
+            <a
+              href="https://t.me/investhub_vn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 font-semibold text-bg hover:bg-primary/90 transition-colors"
+            >
               Tham gia Telegram — 100% Miễn phí
             </a>
           </div>

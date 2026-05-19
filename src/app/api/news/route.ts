@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLatestNews, getMarketNews, searchNews } from "@/lib/services/news-service";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export async function GET(req: NextRequest) {
   const market = req.nextUrl.searchParams.get("market") as "stock" | "gold" | "crypto" | null;

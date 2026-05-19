@@ -59,7 +59,7 @@ export function NewsCard({ article, variant = "default" }: NewsCardProps) {
         <div className="flex items-center justify-between text-xs text-muted">
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            {timeAgo(article.publishedAt)} · {article.source}
+            {timeAgo(article.publishedAt)} · {article.sourceName || article.source}
           </span>
           <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
@@ -79,7 +79,7 @@ export function NewsCard({ article, variant = "default" }: NewsCardProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className={cn("text-xs font-mono px-1.5 py-0.5 rounded", catColor)}>{catLabel}</span>
-          <span className="text-xs text-muted">{article.sourceName || article.source}</span>
+          <span className="text-xs text-muted">{}</span>
         </div>
         <h3 className="text-sm font-semibold text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug">
           {article.title}

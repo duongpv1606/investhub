@@ -25,7 +25,7 @@ export function NewsCard({ article, variant = "default" }: NewsCardProps) {
             {article.title}
           </p>
           <div className="flex items-center gap-2 mt-1.5 text-xs text-muted">
-            <span>{article.source}</span>
+            <span>{article.sourceName || article.source}</span>
             <span>·</span>
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -44,7 +44,7 @@ export function NewsCard({ article, variant = "default" }: NewsCardProps) {
 
   if (variant === "featured") {
     return (
-      <a href={article.url} target="_blank" rel="noopener noreferrer"
+      <a href={article.sourceUrl || article.url} target="_blank" rel="noopener noreferrer"
         className="card p-5 group hover:border-primary/30 transition-all block">
         <div className="flex items-center gap-2 mb-3">
           <span className={cn("text-xs font-mono px-2 py-1 rounded", catColor)}>{catLabel}</span>
@@ -68,7 +68,7 @@ export function NewsCard({ article, variant = "default" }: NewsCardProps) {
   }
 
   return (
-    <a href={article.url} target="_blank" rel="noopener noreferrer"
+    <a href={article.sourceUrl || article.url} target="_blank" rel="noopener noreferrer"
       className="flex gap-4 py-4 border-b border-border/60 last:border-none group">
       <div className="w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-card flex items-center justify-center text-2xl">
         {article.imageUrl
@@ -79,7 +79,7 @@ export function NewsCard({ article, variant = "default" }: NewsCardProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className={cn("text-xs font-mono px-1.5 py-0.5 rounded", catColor)}>{catLabel}</span>
-          <span className="text-xs text-muted">{article.source}</span>
+          <span className="text-xs text-muted">{article.sourceName || article.source}</span>
         </div>
         <h3 className="text-sm font-semibold text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug">
           {article.title}

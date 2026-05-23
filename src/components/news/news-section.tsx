@@ -46,7 +46,7 @@ export function NewsSection() {
             </h3>
             <p className="text-xs text-muted mt-1 line-clamp-2">{a.summary || a.excerpt}</p>
             <p className="text-xs text-muted mt-2">
-              {new Date(a.publishedAt).toLocaleString("vi-VN")}
+              {new Date(a.publishedAt).toLocaleDateString("vi-VN")}
             </p>
           </a>
         ))}
@@ -61,7 +61,7 @@ export function NewsSection() {
                 {a.title}
               </p>
               <p className="text-xs text-muted mt-1">
-                {new Date(a.publishedAt).toLocaleString("vi-VN")}
+                {new Date(a.publishedAt).toLocaleDateString("vi-VN")}
               </p>
             </div>
             {a.imageUrl && (

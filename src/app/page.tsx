@@ -127,7 +127,7 @@ export default async function HomePage() {
         </div>
 
         {/* Main: Chart 70% + Sidebar 30% */}
-        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 310px",gap:"14px",alignItems:"start"}} className="grid-cols-1 lg:grid-cols-[1fr_310px]">
+        <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) 350px",gap:"14px",alignItems:"start"}} className="grid-cols-1 lg:grid-cols-[1fr_350px]">
 
           {/* LEFT */}
           <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>

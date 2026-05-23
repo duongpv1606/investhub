@@ -7,7 +7,6 @@
   --surface: #0A0F1E;
   --card: rgba(15,23,42,0.85);
   --border: rgba(255,255,255,0.06);
-  --border-hover: rgba(255,255,255,0.12);
   --primary: #00E5A8;
   --bullish: #00FFB2;
   --bearish: #FF4D6D;
@@ -15,89 +14,53 @@
   --btc: #F7931A;
   --stock: #4D7CFE;
   --muted: #64748B;
-  --text: #E2E8F0;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
-  color: var(--text);
+  color: #E2E8F0;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
 }
 
 body::before {
   content: '';
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,229,168,0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(77,124,254,0.04) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 40% at 15% -5%, rgba(0,229,168,0.035) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 105%, rgba(77,124,254,0.035) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
 ::selection { background: rgba(0,229,168,0.2); }
 
-@layer utilities {
-  .glass {
-    background: rgba(15,23,42,0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-  .glass-hover:hover {
-    border-color: rgba(255,255,255,0.12);
-    background: rgba(15,23,42,0.85);
-  }
-  .glow-primary { box-shadow: 0 0 20px rgba(0,229,168,0.1); }
-  .glow-bullish { box-shadow: 0 0 15px rgba(0,255,178,0.08); }
-  .glow-bearish { box-shadow: 0 0 15px rgba(255,77,109,0.08); }
-  .text-bullish { color: var(--bullish); }
-  .text-bearish { color: var(--bearish); }
-  .text-gold { color: var(--gold); }
-  .text-btc { color: var(--btc); }
-  .text-stock { color: var(--stock); }
-  .text-muted { color: var(--muted); }
-  .border-glass { border-color: rgba(255,255,255,0.06); }
-  .animate-in { animation: fadeUp 0.4s ease both; }
-  .pulse-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--bullish);
-    animation: pulse 2s ease infinite;
-  }
-}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.85)} }
+@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes glow { 0%,100%{opacity:.4} 50%{opacity:.8} }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.ticker-run { animation: ticker 32s linear infinite; }
+.animate-in { animation: fadeUp .35s ease both; }
+.pulse-dot { animation: pulse 2s ease infinite; }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
+.glass {
+  background: rgba(15,23,42,0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.07);
 }
-
-@keyframes ticker {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.ticker-animate { animation: ticker 35s linear infinite; }
 
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+  background: linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.03) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 4px;

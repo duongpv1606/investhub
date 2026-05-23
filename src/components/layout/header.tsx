@@ -11,92 +11,53 @@ const NAV = [
 ];
 
 export function Header() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
+  const [open, setOpen] = useState(false);
   return (
     <header style={{
-      position: "sticky", top: 0, zIndex: 50,
-      background: "rgba(5,8,22,0.9)",
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      position:"sticky",top:0,zIndex:50,
+      background:"rgba(5,8,22,0.92)",
+      backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",
+      borderBottom:"1px solid rgba(255,255,255,0.06)",
     }}>
-      <div style={{ maxWidth: "1600px", margin: "0 auto", padding: "0 20px", height: "56px", display: "flex", alignItems: "center", gap: "24px" }}>
-        
-        {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none", flexShrink: 0 }}>
-          <div style={{
-            width: "28px", height: "28px", borderRadius: "8px",
-            background: "rgba(0,229,168,0.15)",
-            border: "1px solid rgba(0,229,168,0.3)",
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <TrendingUp size={14} color="#00E5A8" />
+      <div style={{maxWidth:"1600px",margin:"0 auto",padding:"0 18px",height:"52px",display:"flex",alignItems:"center",gap:"20px"}}>
+        <Link href="/" style={{display:"flex",alignItems:"center",gap:"8px",textDecoration:"none",flexShrink:0}}>
+          <div style={{width:"26px",height:"26px",borderRadius:"7px",background:"rgba(0,229,168,0.14)",border:"1px solid rgba(0,229,168,0.28)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <TrendingUp size={13} color="#00E5A8"/>
           </div>
-          <span style={{ fontSize: "16px", fontWeight: "700", color: "#fff", letterSpacing: "-0.3px" }}>
-            Invest<span style={{ color: "#00E5A8" }}>Hub</span>
+          <span style={{fontSize:"15px",fontWeight:700,color:"#fff",letterSpacing:"-0.3px"}}>
+            Invest<span style={{color:"#00E5A8"}}>Hub</span>
           </span>
         </Link>
 
-        {/* Nav */}
-        <nav style={{ display: "flex", gap: "2px", flex: 1 }} className="hidden md:flex">
-          {NAV.map(item => (
-            <Link key={item.href} href={item.href} style={{
-              padding: "6px 14px", borderRadius: "8px",
-              fontSize: "13px", fontWeight: "500",
-              color: "rgba(148,163,184,0.8)",
-              textDecoration: "none",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={e => { (e.target as HTMLElement).style.color = item.color; (e.target as HTMLElement).style.background = `${item.color}12`; }}
-            onMouseLeave={e => { (e.target as HTMLElement).style.color = "rgba(148,163,184,0.8)"; (e.target as HTMLElement).style.background = "transparent"; }}>
-              {item.label}
+        <nav style={{display:"flex",gap:"1px",flex:1}} className="hidden md:flex">
+          {NAV.map(n=>(
+            <Link key={n.href} href={n.href} style={{padding:"5px 13px",borderRadius:"8px",fontSize:"12px",fontWeight:500,color:"rgba(148,163,184,.8)",textDecoration:"none",transition:"all .15s"}}
+              onMouseEnter={e=>{const el=e.target as HTMLElement;el.style.color=n.color;el.style.background=`${n.color}10`;}}
+              onMouseLeave={e=>{const el=e.target as HTMLElement;el.style.color="rgba(148,163,184,.8)";el.style.background="transparent";}}>
+              {n.label}
             </Link>
           ))}
         </nav>
 
-        {/* Right */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto" }}>
-          {/* Live */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px", borderRadius: "20px", background: "rgba(0,255,178,0.08)", border: "1px solid rgba(0,255,178,0.2)" }}>
-            <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#00FFB2", animation: "pulse 2s ease infinite" }} />
-            <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#00FFB2", fontWeight: "600" }}>LIVE</span>
+        <div style={{display:"flex",alignItems:"center",gap:"8px",marginLeft:"auto"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"5px",padding:"3px 9px",borderRadius:"20px",background:"rgba(0,255,178,0.07)",border:"1px solid rgba(0,255,178,0.2)"}}>
+            <div className="pulse-dot" style={{width:"5px",height:"5px",borderRadius:"50%",background:"#00FFB2"}}/>
+            <span style={{fontSize:"10px",fontFamily:"monospace",color:"#00FFB2",fontWeight:600}}>LIVE</span>
           </div>
-
-          {/* Search */}
-          <button style={{ width: "34px", height: "34px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <Search size={14} color="rgba(148,163,184,0.7)" />
-          </button>
-
-          {/* CTA */}
-          <Link href="#" style={{
-            display: "flex", alignItems: "center", gap: "6px",
-            padding: "7px 16px", borderRadius: "8px",
-            background: "rgba(0,229,168,0.12)",
-            border: "1px solid rgba(0,229,168,0.25)",
-            color: "#00E5A8", fontSize: "12px", fontWeight: "600",
-            textDecoration: "none", transition: "all 0.15s",
-          }}>
-            <Bell size={12} />
-            Tín hiệu miễn phí
+          <Link href="#telegram" style={{display:"flex",alignItems:"center",gap:"6px",padding:"6px 14px",borderRadius:"8px",background:"rgba(0,229,168,0.1)",border:"1px solid rgba(0,229,168,0.22)",color:"#00E5A8",fontSize:"11px",fontWeight:600,textDecoration:"none"}} className="hidden sm:flex">
+            <Bell size={11}/> Tín hiệu miễn phí
           </Link>
-
-          {/* Mobile */}
-          <button onClick={() => setMobileOpen(!mobileOpen)}
-            style={{ width: "34px", height: "34px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            className="md:hidden">
-            {mobileOpen ? <X size={14} color="#94A3B8" /> : <Menu size={14} color="#94A3B8" />}
+          <button onClick={()=>setOpen(!open)} style={{width:"32px",height:"32px",borderRadius:"7px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}} className="md:hidden">
+            {open?<X size={14} color="#94A3B8"/>:<Menu size={14} color="#94A3B8"/>}
           </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div style={{ background: "rgba(5,8,22,0.98)", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px" }} className="md:hidden">
-          {NAV.map(item => (
-            <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
-              style={{ display: "block", padding: "10px 0", fontSize: "14px", color: "#94A3B8", textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-              {item.label}
+      {open&&(
+        <div style={{background:"rgba(5,8,22,0.98)",borderTop:"1px solid rgba(255,255,255,0.06)",padding:"10px 18px"}} className="md:hidden">
+          {NAV.map(n=>(
+            <Link key={n.href} href={n.href} onClick={()=>setOpen(false)}
+              style={{display:"block",padding:"10px 0",fontSize:"14px",color:"#94A3B8",textDecoration:"none",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+              {n.label}
             </Link>
           ))}
         </div>

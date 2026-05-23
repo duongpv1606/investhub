@@ -17,15 +17,28 @@ const ITEMS = [
 export function MarketTicker() {
   const items = [...ITEMS,...ITEMS];
   return (
-    <div style={{overflow:"hidden",borderBottom:"1px solid rgba(255,255,255,0.05)",background:"rgba(3,6,18,0.65)",height:"32px",display:"flex",alignItems:"center",position:"relative"}}>
-      <div style={{position:"absolute",left:0,top:0,bottom:0,width:"32px",background:"linear-gradient(to right,#050816,transparent)",zIndex:1}}/>
-      <div style={{position:"absolute",right:0,top:0,bottom:0,width:"32px",background:"linear-gradient(to left,#050816,transparent)",zIndex:1}}/>
+    <div style={{
+      overflow:"hidden",
+      borderBottom:"1px solid rgba(255,255,255,0.05)",
+      background:"rgba(3,6,18,0.7)",
+      height:"36px",
+      display:"flex",
+      alignItems:"center",
+      position:"relative",
+    }}>
+      <div style={{position:"absolute",left:0,top:0,bottom:0,width:"36px",background:"linear-gradient(to right,rgba(5,8,22,1),transparent)",zIndex:1}}/>
+      <div style={{position:"absolute",right:0,top:0,bottom:0,width:"36px",background:"linear-gradient(to left,rgba(5,8,22,1),transparent)",zIndex:1}}/>
       <div className="ticker-run" style={{display:"flex",width:"max-content"}}>
         {items.map((item,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",gap:"7px",padding:"0 16px",borderRight:"1px solid rgba(255,255,255,0.04)",whiteSpace:"nowrap"}}>
-            <span style={{fontSize:"10px",fontFamily:"monospace",fontWeight:700,color:item.col}}>{item.s}</span>
-            <span style={{fontSize:"10px",fontFamily:"monospace",color:"#94A3B8"}}>{item.p}</span>
-            <span style={{fontSize:"10px",fontFamily:"monospace",fontWeight:600,color:item.up?"#00FFB2":"#FF4D6D"}}>{item.c}</span>
+          <div key={i} style={{
+            display:"flex",alignItems:"center",gap:"9px",
+            padding:"0 20px",
+            borderRight:"1px solid rgba(255,255,255,0.04)",
+            whiteSpace:"nowrap",
+          }}>
+            <span className="ticker-sym" style={{color:item.col}}>{item.s}</span>
+            <span className="ticker-price">{item.p}</span>
+            <span className="ticker-chg" style={{color:item.up?"#00FFB2":"#FF4D6D"}}>{item.c}</span>
           </div>
         ))}
       </div>

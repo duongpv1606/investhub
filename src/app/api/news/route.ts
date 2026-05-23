@@ -61,7 +61,7 @@ function parseRSS(xml: string, type: string, source: string) {
 
 async function fetchFeed(url: string, type: string, source: string) {
   try {
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
     const res = await fetch(proxyUrl, {
       signal: AbortSignal.timeout(4500),
       next: { revalidate: 0 },

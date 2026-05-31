@@ -13,10 +13,10 @@ interface MarketIndex {
   category: "forex" | "gold" | "crypto" | "global" | "commodity";
 }
 
-// ── Forex: Frankfurter (no key, very reliable) ────────────────────────────────
+// ── Forex: open.er-api.com (no key, includes VND) ─────────────────────────────
 async function fetchForex(): Promise<MarketIndex[]> {
   try {
-    const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=VND,EUR,JPY,GBP,CNY", {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD", {
       next: { revalidate: 300 },
       signal: AbortSignal.timeout(6000),
     });
@@ -25,8 +25,31 @@ async function fetchForex(): Promise<MarketIndex[]> {
     const rates = data.rates || {};
     const results: MarketIndex[] = [];
 
-    if (rates.VND) results.push({ id: "usd-vnd", name: "USD/VND", value: Math.round(rates.VND), change: Math.round(rates.VND * 0.0012), changePct: 0.12, source: "Frankfurter", category: "forex" });
-    if (rates.EUR) results.push({ id: "eur-usd", name: "EUR/USD", value: +( 1 / rates.EUR).toFixed(4), change: 0.0012, changePct: 0.11, source: "Frankfurter", category: "forex" });
+    if (rates.VND) results.push({ id: "usd-vnd", name: "USD/VND", value: Math.round(rates.VND), change: Math.round(rates.VND * 0.0012), changePct: 0.12, source: "ExchangeRate-API", category: "forex" });
+    if (rates.EUR) results.push({ id: "eur-usd", name: "EUR/USD", value: +(1 / rates.EUR).toFixed(4), change: 0.0012, changePct: 0.11, source: "ExchangeRate-API", category: "forex" });
+    if (rates.JPY) results.push({ id: "usd-jpy", name: "USD/JPY", value: +rates.JPY.toFixed(2), change: 0.25, changePct: 0.16, source: "ExchangeRate-API", category: "forex" });
+    if (rates.CNY) results.push({ id: "usd-cny", name: "USD/CNY", value: +rates.CNY.toFixed(4), change: 0.005, changePct: 0.07, source: "ExchangeRate-API", category: "forex" });
+
+    if (results.length > 0) return results;
+    throw new Error("empty");
+  } catch {
+    return fetchForexFrankfurter();
+  }
+}
+
+// Fallback forex: Frankfurter (không có VND nên chỉ dùng khi nguồn chính lỗi)
+async function fetchForexFrankfurter(): Promise<MarketIndex[]> {
+  try {
+    const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR,JPY,CNY", {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const rates = data.rates || {};
+    const results: MarketIndex[] = [];
+
+    if (rates.EUR) results.push({ id: "eur-usd", name: "EUR/USD", value: +(1 / rates.EUR).toFixed(4), change: 0.0012, changePct: 0.11, source: "Frankfurter", category: "forex" });
     if (rates.JPY) results.push({ id: "usd-jpy", name: "USD/JPY", value: +rates.JPY.toFixed(2), change: 0.25, changePct: 0.16, source: "Frankfurter", category: "forex" });
     if (rates.CNY) results.push({ id: "usd-cny", name: "USD/CNY", value: +rates.CNY.toFixed(4), change: 0.005, changePct: 0.07, source: "Frankfurter", category: "forex" });
 
@@ -37,31 +60,32 @@ async function fetchForex(): Promise<MarketIndex[]> {
   }
 }
 
-// ── Gold: metals-api.com free public endpoint ────────────────────────────────
+// ── Gold: Binance PAXGUSDT (Pax Gold ~ XAU/oz) — reliable, no key ─────────────
 async function fetchGold(): Promise<MarketIndex[]> {
   try {
-    // goldapi.io free tier or metals.live
-    const res = await fetch("https://metals.live/api/spot", {
+    const res = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT", {
       next: { revalidate: 300 },
       signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) throw new Error();
-    const data = await res.json();
+    const d = await res.json();
+    const price = parseFloat(d.lastPrice);
+    const change = parseFloat(d.priceChange);
+    const changePct = parseFloat(d.priceChangePercent);
+    if (!price || Number.isNaN(price)) throw new Error("empty");
 
-    // metals.live returns array [{ metal, price, change, change_percent }]
-    const items = Array.isArray(data) ? data : Object.entries(data).map(([metal, v]: any) => ({ metal, ...v }));
-    const gold = items.find((m: any) => m.metal === "gold" || m.XAU);
-    const silver = items.find((m: any) => m.metal === "silver" || m.XAG);
-
-    const results: MarketIndex[] = [];
-    if (gold?.price) {
-      results.push({ id: "gold-usd", name: "Vàng (XAU/USD)", value: gold.price, change: gold.change || 0, changePct: gold.change_percent || 0, unit: "USD/oz", source: "metals.live", category: "gold" });
-    }
-    if (silver?.price) {
-      results.push({ id: "silver-usd", name: "Bạc (XAG/USD)", value: silver.price, change: silver.change || 0, changePct: silver.change_percent || 0, unit: "USD/oz", source: "metals.live", category: "gold" });
-    }
-    if (results.length > 0) return results;
-    throw new Error("empty");
+    return [
+      {
+        id: "gold-usd",
+        name: "Vàng (XAU/USD)",
+        value: +price.toFixed(2),
+        change: +change.toFixed(2),
+        changePct: +changePct.toFixed(2),
+        unit: "USD/oz",
+        source: "Binance",
+        category: "gold",
+      },
+    ];
   } catch {
     return getMockGold();
   }
@@ -72,8 +96,9 @@ async function fetchCrypto(): Promise<MarketIndex[]> {
   try {
     const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,solana,ripple&vs_currencies=usd&include_24hr_change=true";
     const headers: Record<string, string> = { "Accept": "application/json" };
-    if (process.env.NEXT_PUBLIC_COINGECKO_API_KEY) {
-      headers["x-cg-demo-api-key"] = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
+    const cgKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
+    if (cgKey && !cgKey.startsWith("your_")) {
+      headers["x-cg-demo-api-key"] = cgKey;
     }
     const res = await fetch(url, { headers, next: { revalidate: 300 }, signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error();
@@ -107,7 +132,7 @@ async function fetchCrypto(): Promise<MarketIndex[]> {
   }
 }
 
-// ── Global indices: Stooq ─────────────────────────────────────────────────────
+// ── Global indices: Stooq (CSV — robust) ──────────────────────────────────────
 async function fetchGlobal(): Promise<MarketIndex[]> {
   const symbols = [
     { sym: "^spx", name: "S&P 500", id: "sp500" },
@@ -119,18 +144,15 @@ async function fetchGlobal(): Promise<MarketIndex[]> {
 
   const results = await Promise.allSettled(
     symbols.map(async ({ sym, name, id }) => {
-      const res = await fetch(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=json`, {
+      const res = await fetch(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=csv`, {
         next: { revalidate: 300 },
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok) throw new Error();
-      const data = await res.json();
-      const q = data.symbols?.[0];
-      if (!q || !q.Close || q.Close === "N/D") throw new Error();
-      const close = parseFloat(q.Close);
-      const open = parseFloat(q.Open);
-      const change = close - open;
-      return { id, name, value: +close.toFixed(2), change: +change.toFixed(2), changePct: +((change / open) * 100).toFixed(2), source: "Stooq", category: "global" as const };
+      const q = parseStooqCSV(await res.text());
+      if (!q || !Number.isFinite(q.close) || !Number.isFinite(q.open)) throw new Error();
+      const change = q.close - q.open;
+      return { id, name, value: +q.close.toFixed(2), change: +change.toFixed(2), changePct: +((change / q.open) * 100).toFixed(2), source: "Stooq", category: "global" as const };
     })
   );
 
@@ -138,23 +160,35 @@ async function fetchGlobal(): Promise<MarketIndex[]> {
   return valid.length >= 2 ? valid : getMockGlobal();
 }
 
-// ── Commodity: Stooq WTI ──────────────────────────────────────────────────────
+// ── Commodity: Stooq WTI (CSV) ────────────────────────────────────────────────
 async function fetchCommodity(): Promise<MarketIndex[]> {
   try {
-    const res = await fetch("https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=json", {
+    const res = await fetch("https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=csv", {
       next: { revalidate: 300 },
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) throw new Error();
-    const data = await res.json();
-    const q = data.symbols?.[0];
-    if (!q || !q.Close || q.Close === "N/D") throw new Error();
-    const close = parseFloat(q.Close);
-    const open = parseFloat(q.Open);
-    return [{ id: "wti", name: "Dầu WTI", value: +close.toFixed(2), change: +(close - open).toFixed(2), changePct: +(((close - open) / open) * 100).toFixed(2), unit: "USD/barrel", source: "Stooq", category: "commodity" }];
+    const q = parseStooqCSV(await res.text());
+    if (!q || !Number.isFinite(q.close) || !Number.isFinite(q.open)) throw new Error();
+    const change = q.close - q.open;
+    return [{ id: "wti", name: "Dầu WTI", value: +q.close.toFixed(2), change: +change.toFixed(2), changePct: +((change / q.open) * 100).toFixed(2), unit: "USD/barrel", source: "Stooq", category: "commodity" }];
   } catch {
     return [{ id: "wti", name: "Dầu WTI", value: 78.45, change: -0.32, changePct: -0.41, unit: "USD/barrel", source: "Mock", category: "commodity" }];
   }
+}
+
+// Parse 1 dòng dữ liệu CSV của Stooq -> { open, high, low, close }
+function parseStooqCSV(csv: string): { open: number; high: number; low: number; close: number } | null {
+  const lines = csv.trim().split("\n");
+  if (lines.length < 2) return null;
+  const cols = lines[1].split(",");
+  // Symbol,Date,Time,Open,High,Low,Close,Volume
+  const open = parseFloat(cols[3]);
+  const high = parseFloat(cols[4]);
+  const low = parseFloat(cols[5]);
+  const close = parseFloat(cols[6]);
+  if (Number.isNaN(close)) return null;
+  return { open, high, low, close };
 }
 
 export async function GET(request: Request) {

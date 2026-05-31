@@ -5,34 +5,68 @@ import { MarketTicker } from "@/components/market/market-ticker";
 import { TradingViewChart } from "@/components/charts/tradingview-chart";
 import { NewsCard } from "@/components/news/news-card";
 import { TelegramCTA } from "@/components/market/sidebar-widgets";
-import { MOCK_MARKET_PRICES, MOCK_NEWS, formatPercent, cn } from "@/lib/utils";
+import { MOCK_NEWS, formatPercent, cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Tiền Điện Tử — Bitcoin, Ethereum, XRP giá hôm nay",
   description: "Giá Bitcoin, Ethereum, XRP hôm nay. Biểu đồ crypto realtime, tin tức crypto mới nhất từ CoinDesk và CoinTelegraph.",
 };
 
+export const revalidate = 60;
+
 const cryptoNews = MOCK_NEWS.filter(n => n.category === "crypto");
 
-const CRYPTO_LIST = [
-  { symbol: "BTC", name: "Bitcoin", price: 103420, change: -0.40, mkt: "$2.04T", vol: "$42.1B", icon: "₿", color: "#f7931a" },
-  { symbol: "ETH", name: "Ethereum", price: 3892, change: 2.15, mkt: "$467B", vol: "$18.4B", icon: "Ξ", color: "#627eea" },
-  { symbol: "XRP", name: "XRP", price: 2.48, change: -1.20, mkt: "$142B", vol: "$6.2B", icon: "✕", color: "#00aae4" },
-  { symbol: "SOL", name: "Solana", price: 198, change: 3.80, mkt: "$91B", vol: "$4.8B", icon: "◎", color: "#9945ff" },
-  { symbol: "BNB", name: "BNB", price: 682, change: 1.40, mkt: "$99B", vol: "$2.1B", icon: "B", color: "#f3ba2f" },
-  { symbol: "ADA", name: "Cardano", price: 1.12, change: 0.60, mkt: "$39B", vol: "$1.1B", icon: "₳", color: "#0033ad" },
+const MOCK_CRYPTO = [
+  { symbol: "BTC", name: "Bitcoin", price: 103420, changePct: -0.4, marketCap: 2040000000000, volume: 42100000000, rank: 1, icon: "₿", color: "#f7931a" },
+  { symbol: "ETH", name: "Ethereum", price: 3892, changePct: 2.15, marketCap: 467000000000, volume: 18400000000, rank: 2, icon: "Ξ", color: "#627eea" },
+  { symbol: "XRP", name: "XRP", price: 2.48, changePct: -1.2, marketCap: 142000000000, volume: 6200000000, rank: 3, icon: "✕", color: "#00aae4" },
 ];
 
-export default function CryptoPage() {
+const MOCK_FG = { value: 74, classification: "Greed", yesterday: 68, yesterdayClass: "Greed" };
+
+function fmtUsdCompact(v: number): string {
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+  if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
+  if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
+  return `$${v.toLocaleString()}`;
+}
+
+function fgLabelVi(cls: string): string {
+  const m: Record<string, string> = {
+    "Extreme Fear": "Cực kỳ sợ hãi",
+    "Fear": "Sợ hãi",
+    "Neutral": "Trung lập",
+    "Greed": "Tham lam",
+    "Extreme Greed": "Cực kỳ tham lam",
+  };
+  return m[cls] ?? cls;
+}
+
+async function getData() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/crypto`, { next: { revalidate: 60 } });
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    if (!json.success || !json.assets?.length) throw new Error();
+    return { assets: json.assets, fearGreed: json.fearGreed ?? MOCK_FG };
+  } catch {
+    return { assets: MOCK_CRYPTO, fearGreed: MOCK_FG };
+  }
+}
+
+export default async function CryptoPage() {
+  const { assets, fearGreed } = await getData();
+
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       <Header />
-      <MarketTicker prices={MOCK_MARKET_PRICES} />
+      <MarketTicker />
       <main className="flex-1 mx-auto w-full max-w-screen-2xl px-4 py-6">
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">Tiền Điện Tử</h1>
-          <p className="text-sm text-muted mt-1">Giá Bitcoin, Ethereum và top altcoins — dữ liệu realtime từ Binance</p>
+          <p className="text-sm text-muted mt-1">Giá Bitcoin, Ethereum và top altcoins — dữ liệu realtime từ CoinGecko</p>
         </div>
 
         {/* Crypto overview */}
@@ -50,9 +84,9 @@ export default function CryptoPage() {
                 </tr>
               </thead>
               <tbody>
-                {CRYPTO_LIST.map((c, i) => (
+                {assets.map((c: any, i: number) => (
                   <tr key={c.symbol} className="border-b border-border/40 hover:bg-card/50 transition-colors cursor-pointer">
-                    <td className="px-4 py-3 text-xs text-muted font-mono">{i + 1}</td>
+                    <td className="px-4 py-3 text-xs text-muted font-mono">{c.rank ?? i + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
@@ -66,16 +100,16 @@ export default function CryptoPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 font-mono font-semibold text-sm">
-                      ${c.price.toLocaleString()}
+                      ${c.price.toLocaleString(undefined, { maximumFractionDigits: c.price < 10 ? 4 : 2 })}
                     </td>
                     <td className="px-4 py-3">
                       <span className={cn("font-mono text-sm font-semibold px-2 py-0.5 rounded",
-                        c.change >= 0 ? "text-up bg-up/10" : "text-down bg-down/10")}>
-                        {formatPercent(c.change)}
+                        c.changePct >= 0 ? "text-up bg-up/10" : "text-down bg-down/10")}>
+                        {formatPercent(c.changePct)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted">{c.mkt}</td>
-                    <td className="px-4 py-3 text-xs text-muted">{c.vol}</td>
+                    <td className="px-4 py-3 text-xs text-muted">{c.marketCap ? fmtUsdCompact(c.marketCap) : "—"}</td>
+                    <td className="px-4 py-3 text-xs text-muted">{c.volume ? fmtUsdCompact(c.volume) : "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -105,9 +139,11 @@ export default function CryptoPage() {
               <h3 className="text-sm font-bold text-white mb-3">Fear & Greed Index</h3>
               <div className="flex items-center justify-center py-4">
                 <div className="text-center">
-                  <div className="text-5xl font-mono font-black text-primary mb-1">74</div>
-                  <div className="text-sm font-semibold text-primary">Tham lam</div>
-                  <div className="text-xs text-muted mt-1">Hôm qua: 68 (Tham lam)</div>
+                  <div className="text-5xl font-mono font-black text-primary mb-1">{fearGreed.value}</div>
+                  <div className="text-sm font-semibold text-primary">{fgLabelVi(fearGreed.classification)}</div>
+                  {fearGreed.yesterday != null && (
+                    <div className="text-xs text-muted mt-1">Hôm qua: {fearGreed.yesterday} ({fgLabelVi(fearGreed.yesterdayClass)})</div>
+                  )}
                 </div>
               </div>
             </div>

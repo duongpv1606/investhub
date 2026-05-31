@@ -39,10 +39,19 @@ const panel = {
 export function NewsSidebar() {
   const [news,setNews]=useState<any[]>(MOCK_NEWS);
   const [tab,setTab]=useState<"breaking"|"trending">("breaking");
+  const [movers,setMovers]=useState<any[]>(MOCK_VN_STOCKS);
 
   useEffect(()=>{
     fetch("/api/news?limit=15").then(r=>r.json())
       .then(d=>{if(Array.isArray(d)&&d.length>0)setNews(d);}).catch(()=>{});
+
+    fetch("/api/vn-stocks?type=overview").then(r=>r.json())
+      .then(d=>{
+        const all=[...(d?.stocks?.HOSE||[]),...(d?.stocks?.HNX||[])];
+        if(all.length>0){
+          setMovers(all.map((s:any)=>({symbol:s.symbol,price:s.price,changePercent:s.changePct})));
+        }
+      }).catch(()=>{});
   },[]);
 
   return(
@@ -157,7 +166,7 @@ export function NewsSidebar() {
         <div style={{fontSize:"10px",fontFamily:"'JetBrains Mono',monospace",textTransform:"uppercase",letterSpacing:"1px",color:"#334155",marginBottom:"12px"}}>
           Top tăng mạnh
         </div>
-        {[...MOCK_VN_STOCKS].sort((a,b)=>b.changePercent-a.changePercent).slice(0,5).map((stock,i)=>(
+        {[...movers].sort((a,b)=>b.changePercent-a.changePercent).slice(0,5).map((stock,i)=>(
           <div key={stock.symbol} style={{
             display:"flex",alignItems:"center",justifyContent:"space-between",
             padding:"8px 0",
@@ -214,7 +223,77 @@ export function NewsSidebar() {
   );
 }
 
-export function TopMovers(){return null;}
+export function TopMovers({ stocks = [], type = "up" }: { stocks?: any[]; type?: "up" | "down" }) {
+  const sorted = [...stocks].sort((a, b) =>
+    type === "up" ? b.changePercent - a.changePercent : a.changePercent - b.changePercent
+  ).slice(0, 5);
+
+  const col = type === "up" ? "#00FFB2" : "#FF4D6D";
+
+  return (
+    <div style={{ ...panel, padding: "15px" }}>
+      <div style={{ fontSize: "10px", fontFamily: "'JetBrains Mono',monospace", textTransform: "uppercase", letterSpacing: "1px", color: "#334155", marginBottom: "12px" }}>
+        {type === "up" ? "Top tăng mạnh" : "Top giảm mạnh"}
+      </div>
+      {sorted.map((stock, i) => (
+        <div key={stock.symbol} style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "8px 0",
+          borderBottom: i < sorted.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+            <div style={{
+              width: "30px", height: "30px", borderRadius: "8px",
+              background: `${col}1f`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "10px", fontFamily: "'JetBrains Mono',monospace", fontWeight: 700,
+              color: col, flexShrink: 0,
+            }}>{stock.symbol.slice(0, 3)}</div>
+            <div>
+              <div className="table-sym">{stock.symbol}</div>
+              <div style={{ fontSize: "11px", color: "#334155", fontFamily: "'JetBrains Mono',monospace" }}>{(stock.price / 1000).toFixed(1)}k</div>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div className={stock.changePercent >= 0 ? "pct-up" : "pct-down"}>
+              {stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(2)}%
+            </div>
+          </div>
+        </div>
+      ))}
+      {sorted.length === 0 && (
+        <p style={{ fontSize: "12px", color: "#475569", textAlign: "center", padding: "8px 0" }}>Chưa có dữ liệu</p>
+      )}
+    </div>
+  );
+}
 export function HotNews(){return null;}
-export function TelegramCTA(){return null;}
+export function TelegramCTA(){
+  return (
+    <div style={{
+      background:"rgba(15,23,42,0.82)",
+      border:"1px solid rgba(0,229,168,0.16)",
+      borderRadius:"14px",padding:"18px",textAlign:"center",
+      position:"relative",overflow:"hidden",
+    }}>
+      <div style={{position:"absolute",top:0,left:0,right:0,height:"1px",background:"linear-gradient(to right,transparent,rgba(0,229,168,.45),transparent)"}}/>
+      <Send size={20} color="#00E5A8" style={{margin:"0 auto 10px"}}/>
+      <div style={{fontSize:"14px",fontWeight:600,color:"#E2E8F0",marginBottom:"6px",letterSpacing:"-0.1px"}}>
+        Tín hiệu giao dịch
+      </div>
+      <div style={{fontSize:"12px",color:"#475569",marginBottom:"14px",lineHeight:"1.6"}}>
+        Nhận phân tích & tín hiệu mua/bán hàng ngày qua Telegram
+      </div>
+      <a href="https://t.me/investhub_vn" target="_blank" rel="noopener noreferrer"
+        style={{
+          display:"block",padding:"9px",borderRadius:"9px",
+          background:"rgba(0,229,168,0.1)",border:"1px solid rgba(0,229,168,0.24)",
+          color:"#00E5A8",fontSize:"12.5px",fontWeight:600,textDecoration:"none",
+          letterSpacing:"0.1px",
+        }}>
+        Tham gia miễn phí →
+      </a>
+    </div>
+  );
+}
 export function OpenAccountCTA(){return null;}

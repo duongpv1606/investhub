@@ -37,7 +37,20 @@ async function getVNStocks() {
     const json = await res.json();
     if (!json.success) throw new Error();
     const hose = json.stocks?.HOSE || [];
-    return hose.map((s: any) => ({ symbol: s.symbol, name: s.symbol, price: s.price, change: s.change, changePct: s.changePct, volume: s.volume, high: s.high, low: s.low, exchange: s.exchange }));
+    const hnx = json.stocks?.HNX || [];
+    const all = [...hose, ...hnx];
+    if (all.length === 0) return MOCK_VN_STOCKS;
+    return all.map((s: any) => ({
+      symbol: s.symbol,
+      name: s.name || s.symbol,
+      price: s.price,
+      change: s.change,
+      changePercent: s.changePct,
+      volume: s.volume,
+      marketCap: s.marketCap || 0,
+      exchange: s.exchange,
+      sector: s.sector || "",
+    }));
   } catch { return MOCK_VN_STOCKS; }
 }
 

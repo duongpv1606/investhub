@@ -5,7 +5,7 @@ import { MarketTicker } from "@/components/market/market-ticker";
 import { TradingViewChart } from "@/components/charts/tradingview-chart";
 import { NewsCard } from "@/components/news/news-card";
 import { TelegramCTA } from "@/components/market/sidebar-widgets";
-import { MOCK_MARKET_PRICES, MOCK_GOLD_PRICES, MOCK_NEWS } from "@/lib/utils";
+import { MOCK_NEWS } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -13,13 +13,37 @@ export const metadata: Metadata = {
   description: "Giá vàng SJC hôm nay, vàng nhẫn 9999, XAU/USD realtime. Biểu đồ vàng thế giới, tin tức vàng mới nhất.",
 };
 
+export const revalidate = 300;
+
 const goldNews = MOCK_NEWS.filter(n => n.category === "gold");
 
-export default function GoldPage() {
+const MOCK_GOLD = [
+  { name: "Vàng SJC (Hà Nội)", buyPrice: 109500000, sellPrice: 110500000, changePercent: 0.45, currency: "VND", source: "mock" },
+  { name: "Vàng SJC (TP.HCM)", buyPrice: 109500000, sellPrice: 110500000, changePercent: 0.45, currency: "VND", source: "mock" },
+  { name: "Vàng nhẫn SJC 9999", buyPrice: 104000000, sellPrice: 105500000, changePercent: 0.29, currency: "VND", source: "mock" },
+  { name: "XAU/USD (Thế giới)", buyPrice: 3340, sellPrice: 3345, changePercent: 0.46, currency: "USD", source: "mock" },
+];
+
+async function getGold() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/gold`, { next: { revalidate: 300 } });
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    if (!json.success || !json.prices?.length) throw new Error();
+    return json.prices;
+  } catch {
+    return MOCK_GOLD;
+  }
+}
+
+export default async function GoldPage() {
+  const goldPrices = await getGold();
+
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       <Header />
-      <MarketTicker prices={MOCK_MARKET_PRICES} />
+      <MarketTicker />
       <main className="flex-1 mx-auto w-full max-w-screen-2xl px-4 py-6">
 
         <div className="mb-6">
@@ -44,7 +68,7 @@ export default function GoldPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_GOLD_PRICES.map((g, i) => (
+                {goldPrices.map((g: any, i: number) => (
                   <tr key={i} className="border-b border-border/40 hover:bg-card/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

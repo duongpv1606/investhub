@@ -1,22 +1,33 @@
 import { NextResponse } from "next/server";
 
-// SSI iBoard public API - no key required
-const SSI_BASE = "https://iboard.ssi.com.vn/dchart/api";
+/**
+ * VN Stocks API — dữ liệu thật realtime từ VNDirect dchart
+ *
+ * Nguồn: https://dchart-api.vndirect.com.vn/dchart/history  (miễn phí, không cần key)
+ * Cách lấy giống project vnstock-pro: gọi history lấy các phiên gần nhất rồi
+ * tính giá / thay đổi / khối lượng từ 2 phiên cuối.
+ *
+ * - Giá close của dchart ở đơn vị nghìn VND (vd FPT close=71.6 => 71.600đ)
+ * - Vốn hóa = giá thật × số CP lưu hành (map tĩnh cho các mã lớn)
+ * - Có mock fallback nếu nguồn lỗi.
+ */
 
-// Fallback: VNDirect public endpoint
-const VNDIRECT_BASE = "https://api.vndirect.com.vn/v4";
+const DCHART_BASE = "https://dchart-api.vndirect.com.vn/dchart/history";
 
 export const revalidate = 60; // cache 60s
 
 interface StockQuote {
   symbol: string;
-  price: number;
-  change: number;
+  name: string;
+  price: number;       // VND
+  change: number;      // VND
   changePct: number;
   volume: number;
   high: number;
   low: number;
   open: number;
+  marketCap: number;   // VND
+  sector: string;
   exchange: "HOSE" | "HNX" | "UPCOM";
 }
 
@@ -29,131 +40,192 @@ interface IndexData {
   exchange: string;
 }
 
-// Fetch VN-Index, HNX-Index, UPCOM-Index from SSI
-async function fetchIndices(): Promise<IndexData[]> {
+// Metadata tĩnh: tên, sàn, ngành + số CP lưu hành (xấp xỉ, để ước tính vốn hóa)
+const STOCK_META: Record<
+  string,
+  { name: string; exchange: "HOSE" | "HNX" | "UPCOM"; sector: string; shares: number }
+> = {
+  VCB: { name: "Vietcombank", exchange: "HOSE", sector: "Ngân hàng", shares: 5_589_000_000 },
+  BID: { name: "BIDV", exchange: "HOSE", sector: "Ngân hàng", shares: 5_700_000_000 },
+  CTG: { name: "VietinBank", exchange: "HOSE", sector: "Ngân hàng", shares: 5_370_000_000 },
+  VIC: { name: "Vingroup", exchange: "HOSE", sector: "Bất động sản", shares: 3_823_000_000 },
+  VHM: { name: "Vinhomes", exchange: "HOSE", sector: "Bất động sản", shares: 4_354_000_000 },
+  HPG: { name: "Hòa Phát", exchange: "HOSE", sector: "Thép", shares: 7_700_000_000 },
+  FPT: { name: "FPT Corp", exchange: "HOSE", sector: "Công nghệ", shares: 1_470_000_000 },
+  TCB: { name: "Techcombank", exchange: "HOSE", sector: "Ngân hàng", shares: 7_064_000_000 },
+  MBB: { name: "MB Bank", exchange: "HOSE", sector: "Ngân hàng", shares: 5_300_000_000 },
+  VNM: { name: "Vinamilk", exchange: "HOSE", sector: "Tiêu dùng", shares: 2_090_000_000 },
+  GAS: { name: "PV Gas", exchange: "HOSE", sector: "Năng lượng", shares: 2_298_000_000 },
+  MSN: { name: "Masan Group", exchange: "HOSE", sector: "Tiêu dùng", shares: 1_435_000_000 },
+  MWG: { name: "Thế Giới Di Động", exchange: "HOSE", sector: "Bán lẻ", shares: 1_462_000_000 },
+  VPB: { name: "VPBank", exchange: "HOSE", sector: "Ngân hàng", shares: 7_934_000_000 },
+  ACB: { name: "ACB", exchange: "HOSE", sector: "Ngân hàng", shares: 4_467_000_000 },
+  VRE: { name: "Vincom Retail", exchange: "HOSE", sector: "Bất động sản", shares: 2_272_000_000 },
+  SSI: { name: "SSI Securities", exchange: "HOSE", sector: "Chứng khoán", shares: 1_964_000_000 },
+  PNJ: { name: "Phú Nhuận Jewelry", exchange: "HOSE", sector: "Bán lẻ", shares: 337_000_000 },
+  SHS: { name: "Saigon Hanoi Securities", exchange: "HNX", sector: "Chứng khoán", shares: 1_080_000_000 },
+  PVS: { name: "PTSC", exchange: "HNX", sector: "Năng lượng", shares: 478_000_000 },
+  CEO: { name: "C.E.O Group", exchange: "HNX", sector: "Bất động sản", shares: 514_000_000 },
+  IDC: { name: "IDICO", exchange: "HNX", sector: "Khu công nghiệp", shares: 330_000_000 },
+};
+
+const HOSE_SYMBOLS = [
+  "VCB", "BID", "CTG", "VIC", "VHM", "HPG", "FPT", "TCB",
+  "MBB", "VNM", "GAS", "MSN", "MWG", "VPB", "ACB", "SSI",
+];
+const HNX_SYMBOLS = ["SHS", "PVS", "CEO", "IDC"];
+
+interface RawOHLCV {
+  s: string;
+  t: number[];
+  o: number[];
+  h: number[];
+  l: number[];
+  c: number[];
+  v: number[];
+}
+
+// Gọi dchart history cho 1 symbol
+async function fetchHistory(symbol: string, days = 10): Promise<RawOHLCV | null> {
+  const now = Math.floor(Date.now() / 1000);
+  const from = now - days * 86400;
   try {
     const res = await fetch(
-      `${SSI_BASE}/1/data?lookupType=getIndexComponent&indexId=VNINDEX`,
-      { next: { revalidate: 60 }, signal: AbortSignal.timeout(5000) }
+      `${DCHART_BASE}?symbol=${symbol}&resolution=D&from=${from}&to=${now}`,
+      {
+        // Lưu ý: dchart trả 406 nếu Accept là "application/json"; dùng "*/*"
+        headers: { "User-Agent": "Mozilla/5.0", Accept: "*/*" },
+        next: { revalidate: 60 },
+        signal: AbortSignal.timeout(8000),
+      }
     );
-    if (!res.ok) throw new Error("SSI index fetch failed");
-    const data = await res.json();
+    if (!res.ok) return null;
+    const data: RawOHLCV = await res.json();
+    if (data.s !== "ok" || !data.t?.length) return null;
     return data;
   } catch {
-    // Try VNDirect fallback
-    return fetchIndicesVNDirect();
+    return null;
   }
 }
 
-async function fetchIndicesVNDirect(): Promise<IndexData[]> {
-  try {
-    const res = await fetch(
-      `${VNDIRECT_BASE}/indices?q=indexCode:VNINDEX,HNX-INDEX,UPCOM&size=3`,
-      {
-        headers: { "Accept": "application/json" },
-        next: { revalidate: 60 },
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-    if (!res.ok) throw new Error();
-    const json = await res.json();
-    const items = json.data || [];
-    return items.map((i: any) => ({
-      name: i.indexCode,
-      value: i.indexValue,
-      change: i.change,
-      changePct: i.percentChange,
-      volume: i.totalMatchVolume,
-      exchange: i.indexCode,
-    }));
-  } catch {
-    return getMockIndices();
-  }
+// Snapshot 1 mã: giá / thay đổi / khối lượng từ 2 phiên gần nhất
+async function fetchStockQuote(symbol: string): Promise<StockQuote | null> {
+  const data = await fetchHistory(symbol);
+  if (!data || data.c.length < 1) return null;
+
+  const i = data.c.length - 1;
+  const closeK = data.c[i];               // nghìn VND
+  const prevK = i > 0 ? data.c[i - 1] : data.o[i];
+  const price = closeK * 1000;
+  const change = (closeK - prevK) * 1000;
+  const changePct = prevK > 0 ? ((closeK - prevK) / prevK) * 100 : 0;
+
+  const meta = STOCK_META[symbol];
+  const marketCap = meta ? price * meta.shares : 0;
+
+  return {
+    symbol,
+    name: meta?.name ?? symbol,
+    price,
+    change,
+    changePct: Math.round(changePct * 100) / 100,
+    volume: data.v[i] ?? 0,
+    high: (data.h[i] ?? closeK) * 1000,
+    low: (data.l[i] ?? closeK) * 1000,
+    open: (data.o[i] ?? closeK) * 1000,
+    marketCap,
+    sector: meta?.sector ?? "—",
+    exchange: meta?.exchange ?? "HOSE",
+  };
 }
 
-// Top stocks by market cap from VNDirect (public, no auth)
-async function fetchTopStocks(exchange: string, size = 20): Promise<StockQuote[]> {
-  try {
-    const res = await fetch(
-      `${VNDIRECT_BASE}/stocks?q=type:STOCK,exchange:${exchange}&sort=marketCap:desc&size=${size}`,
-      {
-        headers: { "Accept": "application/json" },
-        next: { revalidate: 60 },
-        signal: AbortSignal.timeout(6000),
-      }
-    );
-    if (!res.ok) throw new Error();
-    const json = await res.json();
-    return (json.data || []).map((s: any) => ({
-      symbol: s.code,
-      price: s.matchPrice || s.referencePrice,
-      change: s.priceChange,
-      changePct: s.priceChangeRatio * 100,
-      volume: s.matchVolume,
-      high: s.highPrice,
-      low: s.lowPrice,
-      open: s.openPrice,
-      exchange: exchange as "HOSE",
-    }));
-  } catch {
-    return [];
-  }
+async function fetchTopStocks(symbols: string[]): Promise<StockQuote[]> {
+  const results = await Promise.all(symbols.map((s) => fetchStockQuote(s)));
+  return results.filter((r): r is StockQuote => r !== null);
 }
 
-// OHLCV candle data for chart
-async function fetchOHLCV(symbol: string, resolution = "D", from?: number, to?: number) {
-  const now = Math.floor(Date.now() / 1000);
-  const start = from || now - 90 * 86400; // 90 days default
-  const end = to || now;
+// Chỉ số VN-Index / HNX-Index / UPCOM
+async function fetchIndices(): Promise<IndexData[]> {
+  const defs: { symbol: string; name: string; exchange: string }[] = [
+    { symbol: "VNINDEX", name: "VN-Index", exchange: "HOSE" },
+    { symbol: "HNX", name: "HNX-Index", exchange: "HNX" },
+    { symbol: "UPCOM", name: "UPCOM", exchange: "UPCOM" },
+  ];
 
-  try {
-    const url = `${SSI_BASE}/1/chart?lookupType=history&symbol=${symbol}&resolution=${resolution}&from=${start}&to=${end}`;
-    const res = await fetch(url, {
-      next: { revalidate: 300 },
-      signal: AbortSignal.timeout(6000),
-    });
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    // SSI returns { t, o, h, l, c, v }
-    if (!data.t?.length) throw new Error("empty");
-    return data.t.map((ts: number, i: number) => ({
-      time: ts * 1000,
-      open: data.o[i],
-      high: data.h[i],
-      low: data.l[i],
-      close: data.c[i],
-      volume: data.v[i],
-    }));
-  } catch {
-    return getMockOHLCV(symbol);
-  }
+  const dataArr = await Promise.all(defs.map((d) => fetchHistory(d.symbol)));
+
+  const indices = dataArr.map((data, idx) => {
+    const def = defs[idx];
+    if (data && data.c.length >= 2) {
+      const i = data.c.length - 1;
+      const value = data.c[i];
+      const prev = data.c[i - 1];
+      const change = value - prev;
+      const changePct = prev > 0 ? (change / prev) * 100 : 0;
+      return {
+        name: def.name,
+        value: Math.round(value * 100) / 100,
+        change: Math.round(change * 100) / 100,
+        changePct: Math.round(changePct * 100) / 100,
+        volume: data.v[i] ?? 0,
+        exchange: def.exchange,
+      };
+    }
+    return null;
+  });
+
+  const valid = indices.filter((x): x is IndexData => x !== null);
+  return valid.length > 0 ? valid : getMockIndices();
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") || "overview";
   const symbol = searchParams.get("symbol") || "";
-  const exchange = (searchParams.get("exchange") || "HOSE").toUpperCase();
   const resolution = searchParams.get("resolution") || "D";
 
   try {
     if (type === "overview") {
-      const [hose, hnx] = await Promise.all([
-        fetchTopStocks("HOSE", 15),
-        fetchTopStocks("HNX", 10),
+      const [hose, hnx, indices] = await Promise.all([
+        fetchTopStocks(HOSE_SYMBOLS),
+        fetchTopStocks(HNX_SYMBOLS),
+        fetchIndices(),
       ]);
-      const indices = await fetchIndices();
+
+      // Nếu cả 2 sàn đều rỗng (nguồn lỗi) -> mock
+      if (hose.length === 0 && hnx.length === 0) {
+        return NextResponse.json({
+          success: true,
+          indices,
+          stocks: { HOSE: getMockStocks(), HNX: [] },
+          isMock: true,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
       return NextResponse.json({
         success: true,
         indices,
         stocks: { HOSE: hose, HNX: hnx },
+        isMock: false,
         updatedAt: new Date().toISOString(),
       });
     }
 
     if (type === "chart" && symbol) {
-      const candles = await fetchOHLCV(symbol, resolution);
-      return NextResponse.json({ success: true, symbol, candles });
+      const data = await fetchHistory(symbol, 120);
+      if (!data) {
+        return NextResponse.json({ success: true, symbol, candles: getMockOHLCV(symbol) });
+      }
+      const candles = data.t.map((ts, i) => ({
+        time: ts * 1000,
+        open: data.o[i] * 1000,
+        high: data.h[i] * 1000,
+        low: data.l[i] * 1000,
+        close: data.c[i] * 1000,
+        volume: data.v[i],
+      }));
+      return NextResponse.json({ success: true, symbol, resolution, candles });
     }
 
     if (type === "indices") {
@@ -162,11 +234,14 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ error: "Unknown type" }, { status: 400 });
-  } catch (err) {
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch stock data", fallback: true },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({
+      success: true,
+      indices: getMockIndices(),
+      stocks: { HOSE: getMockStocks(), HNX: [] },
+      isMock: true,
+      updatedAt: new Date().toISOString(),
+    });
   }
 }
 
@@ -180,19 +255,27 @@ function getMockIndices(): IndexData[] {
   ];
 }
 
+function getMockStocks(): StockQuote[] {
+  return [
+    { symbol: "VCB", name: "Vietcombank", price: 88500, change: 300, changePct: 0.34, volume: 4200000, high: 89000, low: 88000, open: 88200, marketCap: 318000000000000, sector: "Ngân hàng", exchange: "HOSE" },
+    { symbol: "FPT", name: "FPT Corp", price: 142000, change: 4500, changePct: 3.27, volume: 2800000, high: 143000, low: 137500, open: 137500, marketCap: 88000000000000, sector: "Công nghệ", exchange: "HOSE" },
+    { symbol: "HPG", name: "Hòa Phát", price: 28900, change: 600, changePct: 2.12, volume: 12500000, high: 29100, low: 28300, open: 28300, marketCap: 95000000000000, sector: "Thép", exchange: "HOSE" },
+  ];
+}
+
 function getMockOHLCV(symbol: string) {
-  const base = 50 + Math.random() * 150;
+  const base = 50000 + Math.random() * 100000;
   const now = Date.now();
   return Array.from({ length: 90 }, (_, i) => {
-    const drift = (Math.random() - 0.48) * 2;
+    const drift = (Math.random() - 0.48) * 2000;
     const open = base + drift * i;
-    const close = open + (Math.random() - 0.48) * 3;
+    const close = open + (Math.random() - 0.48) * 3000;
     return {
       time: now - (89 - i) * 86400000,
-      open: +open.toFixed(2),
-      high: +(Math.max(open, close) + Math.random() * 2).toFixed(2),
-      low: +(Math.min(open, close) - Math.random() * 2).toFixed(2),
-      close: +close.toFixed(2),
+      open: Math.round(open),
+      high: Math.round(Math.max(open, close) + Math.random() * 2000),
+      low: Math.round(Math.min(open, close) - Math.random() * 2000),
+      close: Math.round(close),
       volume: Math.floor(500000 + Math.random() * 5000000),
     };
   });

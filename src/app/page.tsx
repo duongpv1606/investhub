@@ -7,6 +7,7 @@ import { VNStockTable } from "@/components/market/vn-stock-table";
 import { NewsSidebar } from "@/components/market/sidebar-widgets";
 import { NewsSection } from "@/components/news/news-section";
 import { MOCK_MARKET_PRICES, MOCK_VN_STOCKS } from "@/lib/utils";
+import { getBaseUrl } from "@/lib/base-url";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 
@@ -14,7 +15,7 @@ export const revalidate = 60;
 
 async function getMarketPrices() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = await getBaseUrl();
     const res = await fetch(`${baseUrl}/api/indices`, { next: { revalidate: 300 } });
     if (!res.ok) throw new Error();
     const json = await res.json();
@@ -31,7 +32,7 @@ async function getMarketPrices() {
 
 async function getVNStocks() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = await getBaseUrl();
     const res = await fetch(`${baseUrl}/api/vn-stocks?type=overview`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error();
     const json = await res.json();

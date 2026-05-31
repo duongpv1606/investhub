@@ -51,7 +51,12 @@ export default function NewsPage() {
   useEffect(() => {
     fetch("/api/news?limit=30")
       .then(r => r.json())
-      .then(d => { if (Array.isArray(d) && d.length > 0) setNews(d); })
+      .then(d => {
+        const list = Array.isArray(d) ? d : d?.news;
+        if (Array.isArray(list) && list.length > 0) {
+          setNews(list.map((n: any) => ({ ...n, marketType: n.marketType ?? n.category })));
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

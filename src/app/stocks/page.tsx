@@ -7,6 +7,7 @@ import { VNStockTable } from "@/components/market/vn-stock-table";
 import { NewsCard } from "@/components/news/news-card";
 import { TopMovers, TelegramCTA } from "@/components/market/sidebar-widgets";
 import { MOCK_VN_STOCKS, MOCK_NEWS } from "@/lib/utils";
+import { getBaseUrl } from "@/lib/base-url";
 
 export const metadata: Metadata = {
   title: "Chứng khoán Việt Nam — VN-Index, HNX, UPCOM",
@@ -24,7 +25,7 @@ function fmtVN(n: number, dp = 2) {
 
 async function getData() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = await getBaseUrl();
     const res = await fetch(`${baseUrl}/api/vn-stocks?type=overview`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error();
     const json = await res.json();

@@ -43,7 +43,12 @@ export function NewsSidebar() {
 
   useEffect(()=>{
     fetch("/api/news?limit=15").then(r=>r.json())
-      .then(d=>{if(Array.isArray(d)&&d.length>0)setNews(d);}).catch(()=>{});
+      .then(d=>{
+        const list=Array.isArray(d)?d:d?.news;
+        if(Array.isArray(list)&&list.length>0){
+          setNews(list.map((n:any)=>({...n,marketType:n.marketType??n.category})));
+        }
+      }).catch(()=>{});
 
     fetch("/api/vn-stocks?type=overview").then(r=>r.json())
       .then(d=>{

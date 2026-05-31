@@ -7,6 +7,7 @@ import { NewsCard } from "@/components/news/news-card";
 import { TelegramCTA } from "@/components/market/sidebar-widgets";
 import { MOCK_NEWS } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { getBaseUrl } from "@/lib/base-url";
 
 export const metadata: Metadata = {
   title: "Giá Vàng Hôm Nay — SJC, DOJI, XAU/USD",
@@ -26,7 +27,7 @@ const MOCK_GOLD = [
 
 async function getGold() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = await getBaseUrl();
     const res = await fetch(`${baseUrl}/api/gold`, { next: { revalidate: 300 } });
     if (!res.ok) throw new Error();
     const json = await res.json();

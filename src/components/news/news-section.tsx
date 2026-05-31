@@ -11,7 +11,10 @@ export function NewsSection() {
     fetch("/api/news?limit=20")
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) setNews(data);
+        const list = Array.isArray(data) ? data : data?.news;
+        if (Array.isArray(list) && list.length > 0) {
+          setNews(list.map((n: any) => ({ ...n, marketType: n.marketType ?? n.category })));
+        }
       })
       .catch(() => {});
   }, []);

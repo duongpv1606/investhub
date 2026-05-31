@@ -6,6 +6,7 @@ import { TradingViewChart } from "@/components/charts/tradingview-chart";
 import { NewsCard } from "@/components/news/news-card";
 import { TelegramCTA } from "@/components/market/sidebar-widgets";
 import { MOCK_NEWS, formatPercent, cn } from "@/lib/utils";
+import { getBaseUrl } from "@/lib/base-url";
 
 export const metadata: Metadata = {
   title: "Tiền Điện Tử — Bitcoin, Ethereum, XRP giá hôm nay",
@@ -44,7 +45,7 @@ function fgLabelVi(cls: string): string {
 
 async function getData() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const baseUrl = await getBaseUrl();
     const res = await fetch(`${baseUrl}/api/crypto`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error();
     const json = await res.json();

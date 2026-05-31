@@ -86,12 +86,12 @@ interface RawOHLCV {
 }
 
 // Gọi dchart history cho 1 symbol
-async function fetchHistory(symbol: string, days = 10): Promise<RawOHLCV | null> {
+async function fetchHistory(symbol: string, days = 10, resolution = "D"): Promise<RawOHLCV | null> {
   const now = Math.floor(Date.now() / 1000);
   const from = now - days * 86400;
   try {
     const res = await fetch(
-      `${DCHART_BASE}?symbol=${symbol}&resolution=D&from=${from}&to=${now}`,
+      `${DCHART_BASE}?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${now}`,
       {
         // Lưu ý: dchart trả 406 nếu Accept là "application/json"; dùng "*/*"
         headers: { "User-Agent": "Mozilla/5.0", Accept: "*/*" },
@@ -213,9 +213,15 @@ export async function GET(request: Request) {
     }
 
     if (type === "chart" && symbol) {
-      const data = await fetchHistory(symbol, 120);
+      const days = Math.min(parseInt(searchParams.get("days") || "120"), 1825);
+      // dchart không có dữ liệu phút ổn định (đóng cửa cuối tuần) -> dùng giờ cho khung ngắn.
+      // Khung <=7 ngày: nến giờ với lookback tối thiểu 5 phiên để luôn có dữ liệu thật.
+      const intraday = days <= 7;
+      const reso = intraday ? "60" : "D";
+      const lookback = intraday ? Math.max(days, 5) : days;
+      const data = await fetchHistory(symbol, lookback, reso);
       if (!data) {
-        return NextResponse.json({ success: true, symbol, candles: getMockOHLCV(symbol) });
+        return NextResponse.json({ success: true, symbol, isMock: true, candles: getMockOHLCV(symbol) });
       }
       const candles = data.t.map((ts, i) => ({
         time: ts * 1000,
@@ -225,7 +231,7 @@ export async function GET(request: Request) {
         close: data.c[i] * 1000,
         volume: data.v[i],
       }));
-      return NextResponse.json({ success: true, symbol, resolution, candles });
+      return NextResponse.json({ success: true, symbol, resolution: reso, intraday, isMock: false, candles });
     }
 
     if (type === "indices") {

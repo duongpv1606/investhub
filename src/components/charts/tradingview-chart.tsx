@@ -47,26 +47,31 @@ interface ChartPoint {
   volume: number;
 }
 
-// Lấy dữ liệu OHLC từ TCBS
+// Lấy dữ liệu OHLC thật từ VNDirect (qua route nội bộ, tránh CORS & endpoint chết)
 async function fetchTCBSChart(symbol: string, days: number): Promise<ChartPoint[]> {
-  const to = Math.floor(Date.now() / 1000);
-  const from = to - days * 86400;
   try {
-    const res = await fetch(
-      `https://apipubaws.tcbs.com.vn/stock-insight/v2/stock/bars-long-term?ticker=${symbol}&type=stock&resolution=D&from=${from}&to=${to}`,
-      { headers: { "User-Agent": "Mozilla/5.0" } }
-    );
-    if (!res.ok) throw new Error("TCBS failed");
-    const data = await res.json();
-    if (!data?.data?.length) throw new Error("No data");
-    return data.data.map((item: any) => ({
-      date: new Date(item.tradingDate).toLocaleDateString("vi-VN", { month: "numeric", day: "numeric" }),
-      close: item.close,
-      open: item.open,
-      high: item.high,
-      low: item.low,
-      volume: item.volume,
-    }));
+    const res = await fetch(`/api/vn-stocks?type=chart&symbol=${symbol}&days=${days}`);
+    if (!res.ok) throw new Error("chart fetch failed");
+    const json = await res.json();
+    if (!json?.candles?.length || json.isMock) {
+      // isMock = nguồn lỗi -> dùng mock client để không vỡ UI
+      if (!json?.candles?.length) throw new Error("no data");
+    }
+    const intraday = days <= 7;
+    return json.candles.map((c: any) => {
+      const d = new Date(c.time);
+      return {
+        date: intraday
+          ? `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+          : d.toLocaleDateString("vi-VN", { month: "numeric", day: "numeric" }),
+        // route trả giá ở đơn vị VND đầy đủ; chart hiển thị theo "nghìn"
+        open: c.open / 1000,
+        close: c.close / 1000,
+        high: c.high / 1000,
+        low: c.low / 1000,
+        volume: c.volume,
+      };
+    });
   } catch {
     return generateMockChart(symbol, days);
   }

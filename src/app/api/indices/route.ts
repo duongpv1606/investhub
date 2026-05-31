@@ -60,8 +60,41 @@ async function fetchForexFrankfurter(): Promise<MarketIndex[]> {
   }
 }
 
-// ── Gold: Binance PAXGUSDT (Pax Gold ~ XAU/oz) — reliable, no key ─────────────
+// ── Gold: CoinGecko pax-gold (chạy tren Vercel US), fallback Binance ──────────
 async function fetchGold(): Promise<MarketIndex[]> {
+  // CoinGecko pax-gold trước (Binance bị chặn IP Mỹ 451 trên Vercel)
+  try {
+    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": "InvestHub/1.0" };
+    const cgKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
+    if (cgKey && !cgKey.startsWith("your_")) headers["x-cg-demo-api-key"] = cgKey;
+
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true",
+      { headers, next: { revalidate: 300 }, signal: AbortSignal.timeout(8000) }
+    );
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    const price = d?.["pax-gold"]?.usd;
+    if (!price || Number.isNaN(price)) throw new Error("empty");
+    const changePct = d["pax-gold"].usd_24h_change ?? 0;
+    return [
+      {
+        id: "gold-usd",
+        name: "Vàng (XAU/USD)",
+        value: +price.toFixed(2),
+        change: +(price * changePct / 100).toFixed(2),
+        changePct: +changePct.toFixed(2),
+        unit: "USD/oz",
+        source: "CoinGecko",
+        category: "gold",
+      },
+    ];
+  } catch {
+    return fetchGoldBinance();
+  }
+}
+
+async function fetchGoldBinance(): Promise<MarketIndex[]> {
   try {
     const res = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT", {
       next: { revalidate: 300 },

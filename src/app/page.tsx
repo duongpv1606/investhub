@@ -14,20 +14,46 @@ import Link from "next/link";
 export const revalidate = 60;
 
 async function getMarketPrices() {
-  try {
-    const baseUrl = await getBaseUrl();
-    const res = await fetch(`${baseUrl}/api/indices`, { next: { revalidate: 300 } });
-    if (!res.ok) throw new Error();
-    const json = await res.json();
-    if (!json.success) throw new Error();
-    const { forex, gold, crypto } = json.data;
-    const mapped = [
-      ...forex.map((i: any) => ({ symbol: i.id, name: i.name, price: i.value, change: i.change, changePct: i.changePct, unit: i.unit || "", category: "forex" })),
-      ...gold.slice(0, 2).map((i: any) => ({ symbol: i.id, name: i.name, price: i.value, change: i.change, changePct: i.changePct, unit: i.unit || "", category: "gold" })),
-      ...crypto.slice(0, 2).map((i: any) => ({ symbol: i.id, name: i.name, price: i.value, change: i.change, changePct: i.changePct, unit: i.unit || "USD", category: "crypto" })),
-    ];
-    return mapped.slice(0, 6);
-  } catch { return MOCK_MARKET_PRICES; }
+  const baseUrl = await getBaseUrl();
+
+  // Gọi song song 3 nguồn: vn-stocks (chỉ số VN), gold, crypto
+  const [vnRes, goldRes, cryptoRes] = await Promise.allSettled([
+    fetch(`${baseUrl}/api/vn-stocks?type=overview`, { next: { revalidate: 60 } }).then(r => r.json()),
+    fetch(`${baseUrl}/api/gold`, { next: { revalidate: 300 } }).then(r => r.json()),
+    fetch(`${baseUrl}/api/crypto`, { next: { revalidate: 60 } }).then(r => r.json()),
+  ]);
+
+  const vn = vnRes.status === "fulfilled" ? vnRes.value : null;
+  const gold = goldRes.status === "fulfilled" ? goldRes.value : null;
+  const crypto = cryptoRes.status === "fulfilled" ? cryptoRes.value : null;
+
+  const cards: any[] = [];
+
+  // VN-Index + VN30 từ chỉ số VN
+  const vnIndices: any[] = vn?.indices ?? [];
+  const findIdx = (name: string) => vnIndices.find((i) => i.name === name);
+  for (const [name, label] of [["VN-Index", "VN-Index"], ["VN30", "VN30"]] as const) {
+    const idx = findIdx(name);
+    if (idx) {
+      cards.push({ symbol: name === "VN-Index" ? "VNINDEX" : "VN30", displayName: label, price: idx.value, change: idx.change, changePercent: idx.changePct, type: "index", currency: "VND" });
+    }
+  }
+
+  // SJC + XAU/USD từ gold
+  const goldPrices: any[] = gold?.prices ?? [];
+  const sjc = goldPrices.find((g: any) => g.name?.includes("TP.HCM")) || goldPrices.find((g: any) => g.currency === "VND");
+  if (sjc) cards.push({ symbol: "SJC", displayName: "Vàng SJC", price: sjc.sellPrice, change: 0, changePercent: sjc.changePercent ?? 0, type: "gold", currency: "VND" });
+  const xau = goldPrices.find((g: any) => g.currency === "USD");
+  if (xau) cards.push({ symbol: "GOLD", displayName: "Vàng (XAU/USD)", price: xau.sellPrice, change: 0, changePercent: xau.changePercent ?? 0, type: "gold", currency: "USD" });
+
+  // BTC + ETH từ crypto
+  const assets: any[] = crypto?.assets ?? [];
+  for (const sym of ["BTC", "ETH"]) {
+    const a = assets.find((x: any) => x.symbol === sym);
+    if (a) cards.push({ symbol: sym, displayName: a.name, price: a.price, change: 0, changePercent: a.changePct ?? 0, type: "crypto", currency: "USD" });
+  }
+
+  return cards.length >= 6 ? cards.slice(0, 6) : (cards.length > 0 ? cards : MOCK_MARKET_PRICES);
 }
 
 async function getVNStocks() {
@@ -58,16 +84,17 @@ async function getVNStocks() {
 // Shared styles
 const S = {
   panel: {
-    background: "rgba(15,23,42,0.82)",
+    background: "var(--card-bg)",
     backdropFilter: "blur(14px)" as any,
     WebkitBackdropFilter: "blur(14px)" as any,
-    border: "1px solid rgba(255,255,255,0.07)",
+    border: "1px solid var(--card-border)",
     borderRadius: "16px",
     overflow: "hidden" as any,
+    boxShadow: "var(--shadow)",
   },
   panelHeader: {
     padding: "14px 18px",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
+    borderBottom: "1px solid var(--border)",
     display: "flex" as any,
     alignItems: "center" as any,
     justifyContent: "space-between" as any,
@@ -83,7 +110,7 @@ const S = {
   sectionTitle: {
     fontSize: "14px",
     fontWeight: 600,
-    color: "#E2E8F0",
+    color: "var(--text-heading)",
     letterSpacing: "-0.1px",
   },
   linkMore: (color: string) => ({
@@ -100,7 +127,7 @@ export default async function HomePage() {
   const [marketPrices, vnStocks] = await Promise.all([getMarketPrices(), getVNStocks()]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg,#050816)", color: "#E2E8F0", fontFamily: "'Inter',system-ui,sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", fontFamily: "'Inter',system-ui,sans-serif" }}>
       <Header />
       <MarketTicker />
 
@@ -110,12 +137,12 @@ export default async function HomePage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
           <div>
             <h1 style={{
-              fontSize: "19px", fontWeight: 600, color: "#F1F5F9", margin: 0,
+              fontSize: "19px", fontWeight: 600, color: "var(--text-heading)", margin: 0,
               letterSpacing: "-0.3px", fontFamily: "'Sora','Inter',sans-serif",
             }}>
               Tổng quan thị trường
             </h1>
-            <p style={{ fontSize: "12px", color: "#334155", margin: "4px 0 0", fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.2px" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-dim)", margin: "4px 0 0", fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.2px" }}>
               {new Date().toLocaleDateString("vi-VN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
@@ -184,27 +211,28 @@ export default async function HomePage() {
         {/* CTA Banner */}
         <div style={{
           marginTop: "24px",
-          background: "rgba(15,23,42,0.82)",
+          background: "var(--card-bg)",
           backdropFilter: "blur(14px)",
-          border: "1px solid rgba(0,229,168,0.16)",
+          border: "1px solid var(--card-border)",
           borderRadius: "16px",
           padding: "36px",
           textAlign: "center",
           position: "relative",
           overflow: "hidden",
+          boxShadow: "var(--shadow)",
         }}>
           <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(to right,transparent,rgba(0,229,168,.5),transparent)" }} />
           <Bell size={24} color="#00E5A8" style={{ margin: "0 auto 12px" }} />
           <h2 style={{
-            fontSize: "22px", fontWeight: 700, color: "#F1F5F9", marginBottom: "10px",
+            fontSize: "22px", fontWeight: 700, color: "var(--text-heading)", marginBottom: "10px",
             letterSpacing: "-0.4px", fontFamily: "'Sora','Inter',sans-serif",
           }}>
             Nhận tín hiệu giao dịch miễn phí
           </h2>
-          <p style={{ fontSize: "13.5px", color: "#475569", marginBottom: "20px", maxWidth: "460px", margin: "0 auto 20px", lineHeight: "1.7" }}>
+          <p style={{ fontSize: "13.5px", color: "var(--text-muted)", marginBottom: "20px", maxWidth: "460px", margin: "0 auto 20px", lineHeight: "1.7" }}>
             Tham gia 10,000+ nhà đầu tư — phân tích thị trường, tín hiệu mua/bán hàng ngày qua Telegram
           </p>
-          <a href="https://t.me/investhub_vn" target="_blank" rel="noopener noreferrer"
+          <a href="https://t.me/markethub_vn" target="_blank" rel="noopener noreferrer"
             style={{
               display: "inline-flex", alignItems: "center", gap: "8px",
               padding: "11px 28px", borderRadius: "10px",

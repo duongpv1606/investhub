@@ -64,12 +64,14 @@ async function getData() {
 
 const MOCK_INDICES = [
   { name: "VN-Index", value: "1.285,42", change: "+12,35", pct: "+0,97%", up: true },
+  { name: "VN30", value: "1.320,15", change: "+8,40", pct: "+0,64%", up: true },
   { name: "HNX-Index", value: "238,15", change: "-1,82", pct: "-0,76%", up: false },
-  { name: "UPCOM", value: "95,28", change: "+0,45", pct: "+0,47%", up: true },
 ];
 
 export default async function StocksPage() {
   const { stocks, indices } = await getData();
+  // Bỏ card UPCOM
+  const shownIndices = indices.filter((i: any) => i.name !== "UPCOM").slice(0, 3);
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
@@ -79,12 +81,12 @@ export default async function StocksPage() {
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">Chứng khoán Việt Nam</h1>
-          <p className="text-sm text-muted mt-1">Dữ liệu VN-Index, HNX-Index, UPCOM — cập nhật realtime trong giờ giao dịch</p>
+          <p className="text-sm text-muted mt-1">Dữ liệu VN-Index, VN30, HNX-Index — cập nhật realtime trong giờ giao dịch</p>
         </div>
 
         {/* Index summary */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          {indices.map((idx: any) => (
+          {shownIndices.map((idx: any) => (
             <div key={idx.name} className="card p-4">
               <div className="text-xs text-muted mb-1">{idx.name}</div>
               <div className="text-2xl font-mono font-bold text-white">{idx.value}</div>

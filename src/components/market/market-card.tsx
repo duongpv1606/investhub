@@ -43,9 +43,9 @@ export function MarketCard({data,onClick,active}:MarketCardProps) {
 
   return(
     <button onClick={onClick} style={{
-      background:active?"rgba(0,229,168,0.06)":"rgba(15,23,42,0.82)",
+      background:active?"var(--primary-muted)":"var(--card-bg)",
       backdropFilter:"blur(12px)",
-      border:`1px solid ${active?"rgba(0,229,168,0.3)":"rgba(255,255,255,0.07)"}`,
+      border:`1px solid ${active?"var(--primary)":"var(--card-border)"}`,
       borderRadius:"12px",
       padding:"16px 15px",
       textAlign:"left",
@@ -54,12 +54,13 @@ export function MarketCard({data,onClick,active}:MarketCardProps) {
       transition:"all .2s ease",
       position:"relative",
       overflow:"hidden",
+      boxShadow:"var(--shadow)",
     }}
     onMouseEnter={e=>{if(!active){const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.13)";el.style.transform="translateY(-2px)";el.style.boxShadow="0 8px 24px rgba(0,0,0,0.2)";}}}
     onMouseLeave={e=>{if(!active){const el=e.currentTarget as HTMLElement;el.style.borderColor="rgba(255,255,255,0.07)";el.style.transform="translateY(0)";el.style.boxShadow="none";}}}
     >
       {/* Top accent bar */}
-      <div style={{position:"absolute",top:0,left:0,right:0,height:"2px",background:up?"rgba(0,255,178,0.55)":"rgba(255,77,109,0.55)",borderRadius:"12px 12px 0 0"}}/>
+      <div style={{position:"absolute",top:0,left:0,right:0,height:"2px",background:up?"var(--bullish)":"var(--bearish)",borderRadius:"12px 12px 0 0",opacity:0.7}}/>
 
       {/* Header row */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"11px"}}>

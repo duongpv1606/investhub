@@ -4,38 +4,115 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════ THEME VARIABLES ═══════════════════════════ */
 :root {
+  /* Layout */
   --bg: #050816;
   --surface: #0A0F1E;
-  --card: rgba(15,23,42,0.85);
-  --border: rgba(255,255,255,0.06);
+  --card-bg: #0F172A;
+  --card-border: rgba(255,255,255,0.07);
+  --card-hover: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.08);
+  --header-bg: rgba(5,8,22,0.93);
+  --ticker-bg: rgba(3,6,18,0.7);
+
+  /* Accent */
   --primary: #00E5A8;
+  --primary-muted: rgba(0,229,168,0.12);
   --bullish: #00FFB2;
   --bearish: #FF4D6D;
   --gold: #FFD166;
   --btc: #F7931A;
   --stock: #4D7CFE;
-  --muted: #64748B;
+
+  /* Text */
+  --text: #E2E8F0;
+  --text-heading: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+  --text-ultra-dim: #475569;
+
+  /* RGB channels (cho Tailwind <alpha-value>) */
+  --rgb-bg: 5 8 22;
+  --rgb-surface: 10 15 30;
+  --rgb-card: 15 23 42;
+  --rgb-border: 148 163 184;
+  --rgb-primary: 0 229 168;
+  --rgb-accent: 77 124 254;
+  --rgb-muted: 148 163 184;
+  --rgb-up: 0 255 178;
+  --rgb-down: 255 77 109;
+  --rgb-gold: 255 209 102;
+  --rgb-heading: 241 245 249;
+  --rgb-fg: 226 232 240;
+
+  /* Misc */
+  --shadow: none;
+  --scrollbar-thumb: rgba(255,255,255,0.08);
 
   --text-xs: 11px;
   --text-sm: 12.5px;
   --text-base: 14px;
   --text-lg: 16px;
   --text-xl: 18px;
-  --text-price: 28px;
 }
 
+[data-theme="light"] {
+  --bg: #F4F6FB;
+  --surface: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --card-border: rgba(15,23,42,0.10);
+  --card-hover: rgba(15,23,42,0.03);
+  --border: rgba(15,23,42,0.10);
+  --header-bg: rgba(255,255,255,0.92);
+  --ticker-bg: #FFFFFF;
+
+  --primary: #059669;
+  --primary-muted: rgba(5,150,105,0.10);
+  --bullish: #16A34A;
+  --bearish: #DC2626;
+  --gold: #B45309;
+  --btc: #EA580C;
+  --stock: #2563EB;
+
+  --text: #1E293B;
+  --text-heading: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #5B6573;
+  --text-dim: #6B7280;
+  --text-ultra-dim: #94A3B8;
+
+  --rgb-bg: 244 246 251;
+  --rgb-surface: 255 255 255;
+  --rgb-card: 255 255 255;
+  --rgb-border: 15 23 42;
+  --rgb-primary: 5 150 105;
+  --rgb-accent: 37 99 235;
+  --rgb-muted: 91 101 115;
+  --rgb-up: 22 163 74;
+  --rgb-down: 220 38 38;
+  --rgb-gold: 180 83 9;
+  --rgb-heading: 15 23 42;
+  --rgb-fg: 30 41 59;
+
+  --shadow: 0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
+  --scrollbar-thumb: rgba(15,23,42,0.18);
+}
+
+/* ═══════════════════════════ BASE ═══════════════════════════ */
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
-  color: #E2E8F0;
+  color: var(--text);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: var(--text-base);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color .3s, color .3s;
 }
 
 body::before {
@@ -48,25 +125,21 @@ body::before {
   pointer-events: none;
   z-index: 0;
 }
+[data-theme="light"] body::before { display: none; }
 
-.font-mono,
-.price,
-.ticker-sym,
-.pct-change {
+.font-mono, .price, .ticker-sym, .pct-change {
   font-family: 'JetBrains Mono', 'SF Mono', monospace;
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
 }
-
-.font-display {
-  font-family: 'Sora', 'Inter', system-ui, sans-serif;
-}
+.font-display { font-family: 'Sora', 'Inter', system-ui, sans-serif; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
 ::selection { background: rgba(0,229,168,0.2); }
 
+/* ═══════════════════════════ ANIMATIONS ═══════════════════════════ */
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.85)} }
 @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
@@ -76,146 +149,70 @@ body::before {
 .animate-in { animation: fadeUp .35s ease both; }
 .pulse-dot { animation: pulse 2s ease infinite; }
 
+/* ═══════════════════════════ COMPONENTS ═══════════════════════════ */
 .glass {
-  background: rgba(15,23,42,0.78);
+  background: var(--card-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
 }
 
 .skeleton {
-  background: linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.03) 75%);
+  background: linear-gradient(90deg, var(--card-hover) 25%, var(--border) 50%, var(--card-hover) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 4px;
 }
 
-.news-title {
-  font-size: 13.5px;
-  line-height: 1.55;
-  font-weight: 500;
-  color: #CBD5E1;
-  letter-spacing: -0.1px;
+/* News */
+.news-title { font-size: 13.5px; line-height: 1.55; font-weight: 500; color: var(--text-secondary); letter-spacing: -0.1px; }
+.news-meta { font-size: 11px; color: var(--text-dim); line-height: 1.4; letter-spacing: 0.1px; }
+.news-tag { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+
+/* Cards */
+.card-price-sm { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; letter-spacing: -0.3px; line-height: 1; color: var(--text-heading); font-feature-settings: "tnum"; }
+.card-symbol { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'JetBrains Mono', monospace; }
+.card-name { font-size: 11.5px; font-weight: 400; color: var(--text-muted); line-height: 1.3; }
+
+/* Price changes */
+.pct-up { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--bullish); font-feature-settings: "tnum"; }
+.pct-down { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--bearish); font-feature-settings: "tnum"; }
+
+/* Ticker */
+.ticker-sym { font-size: 11.5px; font-weight: 700; letter-spacing: 0.3px; font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum"; }
+.ticker-price { font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-feature-settings: "tnum"; }
+.ticker-chg { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-feature-settings: "tnum"; }
+
+/* Table */
+.table-sym { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 700; color: var(--stock); letter-spacing: 0.2px; }
+.table-price { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--text); font-feature-settings: "tnum"; }
+.table-name { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+
+/* Misc */
+.section-title { font-size: 13.5px; font-weight: 600; color: var(--text-heading); letter-spacing: -0.1px; }
+.pulse-label { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+.pulse-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; font-feature-settings: "tnum"; }
+
+
+/* ═══════════════════════════ THEME-AWARE UTILITIES ═══════════════════════════ */
+/* .card — dùng rộng rãi trong các page; định nghĩa theo CSS variables */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
 }
 
-.news-meta {
-  font-size: 11px;
-  color: #475569;
-  line-height: 1.4;
-  letter-spacing: 0.1px;
-}
+/* Override text-white để theme-aware (sáng = chữ tối, tối = chữ sáng) */
+[data-theme="light"] .text-white { color: var(--text-heading) !important; }
 
-.news-tag {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
-}
+/* Input/placeholder trong light mode */
+[data-theme="light"] input { color: var(--text); }
+[data-theme="light"] ::placeholder { color: var(--text-dim); }
 
-.card-price-sm {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  line-height: 1;
-  color: #F1F5F9;
-  font-feature-settings: "tnum";
-}
+/* Recharts: lưới & trục dùng currentColor để bám theme */
+.recharts-cartesian-grid line { stroke: var(--border); }
 
-.card-symbol {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.card-name {
-  font-size: 11.5px;
-  font-weight: 400;
-  color: rgba(148,163,184,0.7);
-  line-height: 1.3;
-}
-
-.pct-up {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #00FFB2;
-  font-feature-settings: "tnum";
-}
-
-.pct-down {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #FF4D6D;
-  font-feature-settings: "tnum";
-}
-
-.ticker-sym {
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  font-family: 'JetBrains Mono', monospace;
-  font-feature-settings: "tnum";
-}
-
-.ticker-price {
-  font-size: 11.5px;
-  font-family: 'JetBrains Mono', monospace;
-  color: #94A3B8;
-  font-feature-settings: "tnum";
-}
-
-.ticker-chg {
-  font-size: 11px;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-  font-feature-settings: "tnum";
-}
-
-.section-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #E2E8F0;
-  letter-spacing: -0.1px;
-}
-
-.pulse-label {
-  font-size: 11.5px;
-  color: #64748B;
-  line-height: 1.4;
-}
-
-.pulse-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  font-feature-settings: "tnum";
-}
-
-.table-sym {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #4D7CFE;
-  letter-spacing: 0.2px;
-}
-
-.table-price {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #E2E8F0;
-  font-feature-settings: "tnum";
-}
-
-.table-name {
-  font-size: 12px;
-  color: #64748B;
-  font-weight: 400;
-}
+/* Border mặc định = hairline tinh tế theo theme (ghi đè màu full-opacity của Tailwind) */
+.border-border { border-color: var(--card-border) !important; }

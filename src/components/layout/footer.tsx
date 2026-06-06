@@ -11,7 +11,7 @@ export function Footer() {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20">
                 <TrendingUp className="h-3.5 w-3.5 text-primary" />
               </div>
-              <span className="font-bold text-white">Invest<span className="text-primary">Hub</span></span>
+              <span className="font-bold text-white">Market<span className="text-primary">Hub</span></span>
             </div>
             <p className="text-xs text-muted leading-relaxed">
               Nền tảng phân tích tài chính chuyên nghiệp — chứng khoán, vàng và tiền điện tử.
@@ -36,14 +36,14 @@ export function Footer() {
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">Liên hệ</h4>
             <ul className="space-y-2">
-              {[["Telegram", "https://t.me/investhub_vn"], ["Facebook", "#"], ["Email", "mailto:hello@investhub.vn"]].map(([l,h]) => (
+              {[["Telegram", "https://t.me/markethub_vn"], ["Facebook", "#"], ["Email", "mailto:hello@markethub.vn"]].map(([l,h]) => (
                 <li key={l}><a href={h} className="text-xs text-muted hover:text-white transition-colors">{l}</a></li>
               ))}
             </ul>
           </div>
         </div>
         <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted">© 2025 InvestHub. Không phải tư vấn tài chính.</p>
+          <p className="text-xs text-muted">© 2025 MarketHub. Không phải tư vấn tài chính.</p>
           <p className="text-xs text-muted">Dữ liệu có độ trễ 15 phút. Giao dịch có rủi ro.</p>
         </div>
       </div>

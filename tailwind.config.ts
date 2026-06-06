@@ -1,20 +1,28 @@
 import type { Config } from "tailwindcss";
+
+// Helper: màu dùng RGB-channel var để hỗ trợ opacity modifier (vd bg-card/50)
+const withAlpha = (rgbVar: string) => `rgb(var(${rgbVar}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
-        bg: "#0A0E1A",
-        surface: "#111827",
-        card: "#161D2F",
-        border: "#1F2D45",
-        primary: "#00C896",
-        accent: "#3B82F6",
-        muted: "#64748B",
-        up: "#00C896",
-        down: "#EF4444",
-        gold: "#F59E0B",
-        warn: "#F59E0B",
+        // Theme-aware (đổi theo data-theme)
+        bg: withAlpha("--rgb-bg"),
+        surface: withAlpha("--rgb-surface"),
+        card: withAlpha("--rgb-card"),
+        border: withAlpha("--rgb-border"),
+        primary: withAlpha("--rgb-primary"),
+        accent: withAlpha("--rgb-accent"),
+        muted: withAlpha("--rgb-muted"),
+        up: withAlpha("--rgb-up"),
+        down: withAlpha("--rgb-down"),
+        gold: withAlpha("--rgb-gold"),
+        warn: withAlpha("--rgb-gold"),
+        heading: withAlpha("--rgb-heading"),
+        fg: withAlpha("--rgb-fg"),
       },
       fontFamily: {
         mono: ["'JetBrains Mono'", "monospace"],

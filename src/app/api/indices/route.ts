@@ -64,7 +64,7 @@ async function fetchForexFrankfurter(): Promise<MarketIndex[]> {
 async function fetchGold(): Promise<MarketIndex[]> {
   // CoinGecko pax-gold trước (Binance bị chặn IP Mỹ 451 trên Vercel)
   try {
-    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": "InvestHub/1.0" };
+    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": "MarketHub/1.0" };
     const cgKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
     if (cgKey && !cgKey.startsWith("your_")) headers["x-cg-demo-api-key"] = cgKey;
 

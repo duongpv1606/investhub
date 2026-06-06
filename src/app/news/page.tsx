@@ -66,7 +66,7 @@ export default function NewsPage() {
     : news.filter(n => n.marketType === activeCat);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050816", color: "#E2E8F0", fontFamily: "system-ui,sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", fontFamily: "system-ui,sans-serif" }}>
       <Header />
       <MarketTicker />
 
@@ -74,10 +74,10 @@ export default function NewsPage() {
 
         {/* Header */}
         <div style={{ marginBottom: "20px" }}>
-          <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#F1F5F9", margin: "0 0 4px" }}>
+          <h1 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-heading)", margin: "0 0 4px" }}>
             Tin tức tài chính
           </h1>
-          <p style={{ fontSize: "12px", color: "#475569" }}>
+          <p style={{ fontSize: "12px", color: "var(--text-dim)" }}>
             Cập nhật từ CafeF, VnExpress, CoinTelegraph — {new Date().toLocaleDateString("vi-VN")}
           </p>
         </div>
@@ -89,14 +89,14 @@ export default function NewsPage() {
               style={{
                 padding: "6px 16px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
                 cursor: "pointer", transition: "all .15s",
-                background: activeCat === cat.key ? "rgba(0,229,168,.12)" : "rgba(255,255,255,.04)",
-                border: `1px solid ${activeCat === cat.key ? "rgba(0,229,168,.3)" : "rgba(255,255,255,.07)"}`,
-                color: activeCat === cat.key ? "#00E5A8" : "#64748B",
+                background: activeCat === cat.key ? "var(--primary-muted)" : "var(--card-hover)",
+                border: `1px solid ${activeCat === cat.key ? "var(--primary)" : "var(--card-border)"}`,
+                color: activeCat === cat.key ? "var(--primary)" : "var(--text-muted)",
               }}>
               {cat.label}
             </button>
           ))}
-          <span style={{ marginLeft: "auto", fontSize: "11px", color: "#334155", fontFamily: "monospace", alignSelf: "center" }}>
+          <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-ultra-dim)", fontFamily: "monospace", alignSelf: "center" }}>
             {filtered.length} bài viết
           </span>
         </div>
@@ -115,13 +115,14 @@ export default function NewsPage() {
                   <a key={a.id} href={a.sourceUrl || a.url || "#"} target="_blank" rel="noopener noreferrer"
                     style={{
                       display: "block", textDecoration: "none",
-                      background: "rgba(15,23,42,.8)",
-                      border: "1px solid rgba(255,255,255,.07)",
+                      background: "var(--card-bg)",
+                      border: "1px solid var(--card-border)",
                       borderRadius: "12px", padding: "14px",
                       transition: "all .15s", cursor: "pointer",
+                      boxShadow: "var(--shadow)",
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,.14)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,.07)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--primary)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--card-border)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
                     <div style={{ display: "flex", gap: "5px", marginBottom: "8px", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", fontFamily: "monospace", fontWeight: "600", background: tc.bg, color: tc.color }}>
                         {a.marketType === "crypto" ? "Crypto" : a.marketType === "gold" ? "Vàng" : "Chứng khoán"}
@@ -133,13 +134,13 @@ export default function NewsPage() {
                     {a.imageUrl && (
                       <img src={a.imageUrl} alt="" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} loading="lazy" />
                     )}
-                    <h3 style={{ fontSize: "13px", fontWeight: "600", color: "#E2E8F0", lineHeight: "1.4", margin: "0 0 6px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <h3 style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", lineHeight: "1.4", margin: "0 0 6px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {a.title}
                     </h3>
-                    <p style={{ fontSize: "11px", color: "#475569", margin: "0 0 8px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
+                    <p style={{ fontSize: "11px", color: "var(--text-dim)", margin: "0 0 8px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
                       {a.summary || a.excerpt}
                     </p>
-                    <div style={{ fontSize: "10px", color: "#334155" }}>
+                    <div style={{ fontSize: "10px", color: "var(--text-ultra-dim)" }}>
                       {a.sourceName || a.source} · {timeAgo(a.publishedAt)}
                     </div>
                   </a>
@@ -148,7 +149,7 @@ export default function NewsPage() {
             </div>
 
             {/* Rest list */}
-            <div style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(255,255,255,.07)", borderRadius: "12px", overflow: "hidden" }}>
+            <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow)" }}>
               {filtered.slice(4).map((a: any, i: number) => {
                 const tc = TYPE_COLOR[a.marketType] || TYPE_COLOR.macro;
                 const sent = SENT_MAP[getSentiment(a.title)];
@@ -157,11 +158,11 @@ export default function NewsPage() {
                     style={{
                       display: "flex", gap: "10px", padding: "12px 14px",
                       textDecoration: "none", transition: "background .12s",
-                      borderBottom: i < filtered.slice(4).length - 1 ? "1px solid rgba(255,255,255,.04)" : "none",
+                      borderBottom: i < filtered.slice(4).length - 1 ? "1px solid var(--card-border)" : "none",
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.025)"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--card-hover)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                    <div style={{ width: "52px", height: "44px", borderRadius: "8px", flexShrink: 0, background: "rgba(255,255,255,.05)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>
+                    <div style={{ width: "52px", height: "44px", borderRadius: "8px", flexShrink: 0, background: "var(--card-hover)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>
                       {a.imageUrl
                         ? <img src={a.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
                         : a.marketType === "crypto" ? "₿" : a.marketType === "gold" ? "🥇" : "📈"
@@ -176,10 +177,10 @@ export default function NewsPage() {
                           {sent.label}
                         </span>
                       </div>
-                      <p style={{ fontSize: "12px", fontWeight: "500", color: "#CBD5E1", margin: "0 0 3px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.35" }}>
+                      <p style={{ fontSize: "12px", fontWeight: "500", color: "var(--text-secondary)", margin: "0 0 3px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.35" }}>
                         {a.title}
                       </p>
-                      <div style={{ fontSize: "10px", color: "#334155" }}>
+                      <div style={{ fontSize: "10px", color: "var(--text-ultra-dim)" }}>
                         {a.sourceName || a.source} · {timeAgo(a.publishedAt)}
                       </div>
                     </div>
@@ -187,7 +188,7 @@ export default function NewsPage() {
                 );
               })}
               {filtered.length === 0 && (
-                <div style={{ padding: "32px", textAlign: "center", color: "#334155", fontSize: "13px" }}>
+                <div style={{ padding: "32px", textAlign: "center", color: "var(--text-ultra-dim)", fontSize: "13px" }}>
                   Không có tin tức
                 </div>
               )}
@@ -196,33 +197,33 @@ export default function NewsPage() {
 
           {/* Sidebar */}
           <div style={{ position: "sticky", top: "72px", display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ background: "rgba(15,23,42,.8)", border: "1px solid rgba(255,255,255,.07)", borderRadius: "12px", overflow: "hidden" }}>
-              <div style={{ padding: "10px 13px", borderBottom: "1px solid rgba(255,255,255,.05)", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: ".7px", color: "#334155", display: "flex", alignItems: "center", gap: "7px" }}>
+            <div style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow)" }}>
+              <div style={{ padding: "10px 13px", borderBottom: "1px solid var(--card-border)", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: ".7px", color: "var(--text-ultra-dim)", display: "flex", alignItems: "center", gap: "7px" }}>
                 <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#FF4D6D", animation: "pulse 1.5s ease infinite" }} />
                 Tin nóng
               </div>
               {news.slice(0, 8).map((a: any) => (
                 <a key={a.id} href={a.sourceUrl || a.url || "#"} target="_blank" rel="noopener noreferrer"
-                  style={{ display: "block", padding: "9px 13px", borderBottom: "1px solid rgba(255,255,255,.03)", textDecoration: "none", transition: "background .12s" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.025)"; }}
+                  style={{ display: "block", padding: "9px 13px", borderBottom: "1px solid var(--card-border)", textDecoration: "none", transition: "background .12s" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--card-hover)"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
-                  <p style={{ fontSize: "11px", fontWeight: "500", color: "#CBD5E1", margin: "0 0 3px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.35" }}>
+                  <p style={{ fontSize: "11px", fontWeight: "500", color: "var(--text-secondary)", margin: "0 0 3px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.35" }}>
                     {a.title}
                   </p>
-                  <div style={{ fontSize: "10px", color: "#334155" }}>
+                  <div style={{ fontSize: "10px", color: "var(--text-ultra-dim)" }}>
                     {a.sourceName || a.source} · {timeAgo(a.publishedAt)}
                   </div>
                 </a>
               ))}
             </div>
 
-            <a href="https://t.me/investhub_vn" target="_blank" rel="noopener noreferrer"
-              style={{ display: "block", background: "rgba(15,23,42,.8)", border: "1px solid rgba(0,229,168,.15)", borderRadius: "12px", padding: "16px", textAlign: "center", textDecoration: "none" }}>
-              <div style={{ fontSize: "13px", fontWeight: "600", color: "#E2E8F0", marginBottom: "6px" }}>Tín hiệu giao dịch</div>
-              <div style={{ fontSize: "11px", color: "#475569", marginBottom: "12px", lineHeight: "1.5" }}>
+            <a href="https://t.me/markethub_vn" target="_blank" rel="noopener noreferrer"
+              style={{ display: "block", background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "12px", padding: "16px", textAlign: "center", textDecoration: "none", boxShadow: "var(--shadow)" }}>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--text)", marginBottom: "6px" }}>Tín hiệu giao dịch</div>
+              <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "12px", lineHeight: "1.5" }}>
                 Nhận phân tích & tín hiệu mua/bán qua Telegram mỗi ngày
               </div>
-              <div style={{ padding: "8px", borderRadius: "8px", background: "rgba(0,229,168,.1)", border: "1px solid rgba(0,229,168,.22)", color: "#00E5A8", fontSize: "12px", fontWeight: "600" }}>
+              <div style={{ padding: "8px", borderRadius: "8px", background: "var(--primary-muted)", border: "1px solid var(--primary)", color: "var(--primary)", fontSize: "12px", fontWeight: "600" }}>
                 Tham gia miễn phí →
               </div>
             </a>

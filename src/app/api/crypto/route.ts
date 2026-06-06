@@ -34,7 +34,7 @@ const ID_TO_SYMBOL: Record<string, string> = Object.fromEntries(
 
 async function fetchCoinGecko(): Promise<CryptoAsset[]> {
   const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${IDS}&order=market_cap_desc&price_change_percentage=24h`;
-  const headers: Record<string, string> = { Accept: "application/json", "User-Agent": "InvestHub/1.0" };
+  const headers: Record<string, string> = { Accept: "application/json", "User-Agent": "MarketHub/1.0" };
   const cgKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
   if (cgKey && !cgKey.startsWith("your_")) {
     headers["x-cg-demo-api-key"] = cgKey;

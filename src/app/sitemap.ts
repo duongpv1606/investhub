@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "https://investhub.vn";
+  const base = process.env.NEXT_PUBLIC_APP_URL || "https://markethub.vn";
   return [
     { url: base, lastModified: new Date(), changeFrequency: "hourly", priority: 1 },
     { url: `${base}/stocks`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },

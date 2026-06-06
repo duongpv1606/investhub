@@ -100,26 +100,26 @@ export function MarketTicker() {
   return (
     <div style={{
       overflow: "hidden",
-      borderBottom: "1px solid rgba(255,255,255,0.05)",
-      background: "rgba(3,6,18,0.7)",
+      borderBottom: "1px solid var(--border)",
+      background: "var(--ticker-bg)",
       height: "36px",
       display: "flex",
       alignItems: "center",
       position: "relative",
     }}>
-      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "36px", background: "linear-gradient(to right,rgba(5,8,22,1),transparent)", zIndex: 1 }} />
-      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "36px", background: "linear-gradient(to left,rgba(5,8,22,1),transparent)", zIndex: 1 }} />
+      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "36px", background: "linear-gradient(to right, var(--bg), transparent)", zIndex: 1 }} />
+      <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "36px", background: "linear-gradient(to left, var(--bg), transparent)", zIndex: 1 }} />
       <div className="ticker-run" style={{ display: "flex", width: "max-content" }}>
         {loop.map((item, i) => (
           <div key={i} style={{
             display: "flex", alignItems: "center", gap: "9px",
             padding: "0 20px",
-            borderRight: "1px solid rgba(255,255,255,0.04)",
+            borderRight: "1px solid var(--border)",
             whiteSpace: "nowrap",
           }}>
             <span className="ticker-sym" style={{ color: item.col }}>{item.s}</span>
             <span className="ticker-price">{item.p}</span>
-            {item.c && <span className="ticker-chg" style={{ color: item.up ? "#00FFB2" : "#FF4D6D" }}>{item.c}</span>}
+            {item.c && <span className="ticker-chg" style={{ color: item.up ? "var(--bullish)" : "var(--bearish)" }}>{item.c}</span>}
           </div>
         ))}
       </div>

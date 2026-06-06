@@ -20,7 +20,7 @@ const COIN_IDS = {
 async function fetchWithRetry(url: string, retries = 3): Promise<any> {
   const headers: Record<string, string> = {
     Accept: "application/json",
-    "User-Agent": "InvestHub/1.0",
+    "User-Agent": "MarketHub/1.0",
   };
   if (API_KEY) headers["x-cg-demo-api-key"] = API_KEY;
 

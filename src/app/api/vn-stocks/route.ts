@@ -148,6 +148,7 @@ async function fetchTopStocks(symbols: string[]): Promise<StockQuote[]> {
 async function fetchIndices(): Promise<IndexData[]> {
   const defs: { symbol: string; name: string; exchange: string }[] = [
     { symbol: "VNINDEX", name: "VN-Index", exchange: "HOSE" },
+    { symbol: "VN30", name: "VN30", exchange: "HOSE" },
     { symbol: "HNX", name: "HNX-Index", exchange: "HNX" },
     { symbol: "UPCOM", name: "UPCOM", exchange: "UPCOM" },
   ];

@@ -19,7 +19,7 @@ async function fetchRSS(url: string, source: string, category: NewsItem["categor
   try {
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; InvestHub/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; MarketHub/1.0)",
         "Accept": "application/rss+xml, application/xml, text/xml, */*",
       },
       next: { revalidate: 1800 },
